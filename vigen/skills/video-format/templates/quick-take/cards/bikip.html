@@ -1,0 +1,43 @@
+<!-- "…lấy cái Master Prompt này, chính là cái bí kíp mà mình sẽ gửi cho anh em ở cuối video": the Master Prompt file
+     (same tile as the one shared in the Zalo chat) gets a "Bí kíp" badge, then a video progress bar runs to its end
+     where a marker says "Gửi cuối video". -->
+<style>
+  .bk-file { position: absolute; left: 214px; top: 62px; width: 500px; height: 150px; box-sizing: border-box; border-radius: 26px; background: #fff;
+    display: flex; align-items: center; gap: 24px; padding: 0 30px; box-shadow: 0 14px 34px rgba(0,0,0,0.35); opacity: 0; }
+  .bk-ic { width: 84px; height: 98px; border-radius: 16px; background: #0E78D0; display: flex; align-items: center; justify-content: center; flex: none; }
+  .bk-file b { display: block; font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 40px; line-height: 1.1; color: #0A1F6E; white-space: nowrap; }
+  .bk-file small { display: block; margin-top: 6px; font-family: "Be Vietnam Pro"; font-weight: 600; font-size: 22px; color: #6b7a90; }
+  .bk-badge { position: absolute; left: 630px; top: 34px; height: 52px; padding: 0 18px; border-radius: 26px; background: #FFC531; display: flex;
+    align-items: center; gap: 8px; font-family: "Be Vietnam Pro"; font-weight: 900; font-size: 26px; color: #0A1F6E;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.35); transform: rotate(8deg); opacity: 0; }
+  .bk-bar { position: absolute; left: 100px; top: 330px; width: 660px; height: 14px; border-radius: 7px; background: rgba(255,255,255,0.22); opacity: 0; }
+  .bk-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 7px; background: #5fb4ff; transform-origin: 0 50%; transform: scaleX(0); }
+  .bk-head { position: absolute; left: -11px; top: -6px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.35); }
+  .bk-pin { position: absolute; left: 732px; top: 300px; width: 56px; height: 56px; border-radius: 50%; background: #FFC531; display: flex;
+    align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.35); opacity: 0; }
+  .bk-lbl { position: absolute; left: 600px; top: 238px; width: 320px; text-align: center; font-family: "Be Vietnam Pro"; font-weight: 800;
+    font-size: 30px; color: #fff; white-space: nowrap; opacity: 0; }
+</style>
+<div class="bk-file" id="bk-file">
+  <div class="bk-ic"><svg width="46" height="52" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+  <div><b>Master Prompt</b><small>Tệp</small></div>
+</div>
+<div class="bk-badge" id="bk-badge"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0A1F6E" stroke-width="2.6" stroke-linecap="round"><circle cx="8" cy="8" r="4.5"/><path d="M11.2 11.2 20 20M16.5 16.5l2.5-2.5M18.5 18.5l2-2"/></svg>Bí kíp</div>
+<div class="bk-bar" id="bk-bar"><div class="bk-fill" id="bk-fill"></div><div class="bk-head" id="bk-head"></div></div>
+<div class="bk-lbl" id="bk-lbl">Gửi cuối video</div>
+<div class="bk-pin" id="bk-pin"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0A1F6E" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10 14M21 3l-7 18-4-7-7-4Z"/></svg></div>
+<script>
+  const q = (s) => CARD + " " + s;
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  // "…lấy cái Master Prompt này"
+  at("#bk-file", { opacity: 0, scale: 0.7, y: 20 }, { opacity: 1, scale: 1, y: 0 }, 28.45, 0.4, "back.out(1.6)");
+  // "chính là cái bí kíp"
+  at("#bk-badge", { opacity: 0, scale: 0.3, rotation: -20 }, { opacity: 1, scale: 1, rotation: 8 }, 29.41, 0.4, "back.out(2)");
+  at("#bk-file", { boxShadow: "0 14px 34px rgba(0,0,0,0.35), 0 0 0 0px rgba(255,197,49,0)" }, { boxShadow: "0 14px 34px rgba(0,0,0,0.35), 0 0 0 8px rgba(255,197,49,0.55)" }, 29.45, 0.35);
+  // "mà mình sẽ gửi cho anh em ở cuối video": the video plays to its end
+  at("#bk-bar", { opacity: 0, y: 16 }, { opacity: 1, y: 0 }, 30.05, 0.3);
+  at("#bk-fill", { scaleX: 0 }, { scaleX: 1 }, 30.3, 0.65, "power1.inOut");
+  at("#bk-head", { x: 0 }, { x: 660 }, 30.3, 0.65, "power1.inOut");
+  at("#bk-pin", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1 }, 30.9, 0.35, "back.out(2.2)");
+  at("#bk-lbl", { opacity: 0, y: 12 }, { opacity: 1, y: 0 }, 30.95, 0.3);
+</script>

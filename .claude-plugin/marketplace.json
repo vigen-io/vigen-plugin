@@ -1,0 +1,12 @@
+{
+  "name": "vigen",
+  "description": "Vigen's plugin for Claude: talking-avatar videos made from Vigen templates.",
+  "owner": { "name": "Vigen", "url": "https://vigen.io" },
+  "plugins": [
+    {
+      "name": "vigen",
+      "source": "./vigen",
+      "description": "Talking-avatar videos with Vigen: a koi (avatar + cloned voice) lipsyncs the script, then a layered HyperFrames edit (camera, captions, cards, stock media, UI demos, sound) in a video template's style."
+    }
+  ]
+}

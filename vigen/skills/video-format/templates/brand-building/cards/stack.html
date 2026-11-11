@@ -1,0 +1,34 @@
+<!-- A proof number said mid-sentence ("…I've already sold more than 100 hoodies"): the words stacked big over the
+     presenter's own take, blurred out, each row appearing as it is said; the number in dark red, bigger, in the
+     middle row even when it is said last. Measured at 1080×1920: the words ≈ 132 px Inter ExtraBold white, the
+     number ≈ 230 px #880513, rows tight (MORE at y ≈ 705, 100 at 820, THAN at 1010); held ≈ 1.2–1.5 s.
+
+     Copy into the project's cards/, edit ROWS (top to bottom: text, when it is said, big: true for the number),
+     retimed to transcript.json. Place it with the shots layout "over", "subs": false, on top of a "full" panel
+     of the plate graded to blur over the same span (shots panel-transitions.md, Blur grade). -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 100 900; src: url("assets/fonts/Inter.ttf"); }
+  .sk-row { position: absolute; left: 0; width: 1080px; text-align: center; font-family: "Inter"; font-weight: 800;
+    text-transform: uppercase; letter-spacing: -0.035em; line-height: 1; white-space: nowrap; opacity: 0;
+    text-shadow: 0 4px 24px rgba(0, 0, 0, 0.18); }
+</style>
+<div id="sk"></div>
+<script>
+  // ── edit these (video seconds) ──
+  const ROWS = [
+    { text: "MORE", at: S + 0.0 },
+    { text: "100", at: S + 0.45, big: true },
+    { text: "THAN", at: S + 0.17 },
+  ];
+
+  const q = (s) => CARD + " " + s;
+  const small = 132, big = 230, gap = -0.1;   // rows overlap their line boxes a little, as in the reference
+  const hs = ROWS.map((r) => (r.big ? big : small) * (1 + gap));
+  let y = Math.round(940 - hs.reduce((a, b) => a + b, 0) / 2);
+  document.querySelector(q("#sk")).innerHTML = ROWS.map((r, i) => {
+    const html = `<div class="sk-row" id="sk-r${i}" style="top:${y}px;font-size:${r.big ? big : small}px;color:${r.big ? "#880513" : "#FFFFFF"}">${r.text}</div>`;
+    y += Math.round(hs[i]);
+    return html;
+  }).join("");
+  ROWS.forEach((r, i) => tl.set(q(`#sk-r${i}`), { opacity: 1 }, r.at));
+</script>

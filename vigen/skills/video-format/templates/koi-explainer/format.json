@@ -1,0 +1,35 @@
+{
+  "name": "koi-explainer",
+  "guide": "FORMAT.md",
+  "refs": [],
+  "targets": {
+    "flashesPerMin": [0, 3],
+    "bedBelowVoice": [10, 14],
+    "subtitleCoverage": 0.4
+  },
+  "layouts": {
+    "behind": 1
+  },
+  "brand": {
+    "font": "Be Vietnam Pro",
+    "accent": "#0E78D0",
+    "statColor": "#0A1F6E"
+  },
+  "shots": {
+    "hold": true,
+    "frames": { "wide": 1, "punch": 1.27, "tight": 1.45 },
+    "panel": { "bg": "#0b1b2b" }
+  },
+  "captions": {
+    "style": {
+      "entrance": "glitch",
+      "exit": "smear",
+      "b": { "outline": "#fff", "glow": true }
+    }
+  },
+  "sound": {
+    "bgm": { "below": 11 },
+    "cues": "auto"
+  },
+  "cards": {}
+}

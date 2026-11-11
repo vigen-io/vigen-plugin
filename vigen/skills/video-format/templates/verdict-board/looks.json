@@ -1,0 +1,20 @@
+{
+  "about": "Optional: verdict-board works with the koi's own photo as it is only when it has headroom for the board and the koi looks off to the side (an interview: the eyes rest on the interviewer beside the camera, never the lens). When the user wants the reference's setting, the koi is reformed into the template's seated shot with the image-gen skill's formula (SKILL.md § 3): image 1 = a crop of the koi's head, image 2 = `shots/seated.jpg`, the prompt below with the look's `hair` line and `{{outfit}}` = the koi's own clothes from their photo. One standard 1K image; save it with `vigen.mjs koi add-look <koiDir> --template verdict-board --look seated --frame <file>` and lipsync every part with `--look verdict-board-seated`. The camera's wide/punch reframes are punch-ins on this one take.",
+  "optional": true,
+  "image": {
+    "aspect": "9:16",
+    "size": "1K",
+    "model": "standard"
+  },
+  "prompt": "Recreate image 2 as a new photo, with the person from image 1 in it. Image 1 is only a reference for who the person is (a close-up of their head): ignore anything else in it. The result is image 2's scene, with its person replaced.\n\nCopy image 2 for everything about the shot: the camera angle and height, the distance and framing (how big the person is in the frame and where they sit in it), the pose, the hands, the chair, the set and props, and the colour, light and film look: match image 2's colours, brightness and softness exactly.\n\nTake only the person's identity from image 1: their face, skin tone, build, and their hair's length, cut and colour. It must clearly be the person in image 1, not the person in image 2. The hair keeps its own length and cut, {{hair}}.\n\nOutfit: {{outfit}}. They wear this, not the clothes of the person in image 2, fitted naturally to image 2's pose.\n\nThe face is fully visible and sharp, lips gently closed with a calm, pleasant expression (no teeth showing), the head turned and the eyes resting on someone sitting just beside the camera, exactly as in image 2, not looking into the lens. The upper third of the frame stays empty wall. Exactly one person. No text, no captions, no drawings, no logos, no icons, no watermark. Photorealistic, vertical 9:16.",
+  "looks": [
+    {
+      "name": "seated",
+      "shot": "shots/seated.jpg",
+      "hair": "falling naturally, as when sitting upright",
+      "use": "every part: one seated take, reframed wide / punch on every item change",
+      "share": 1.0,
+      "subTop": 0.75
+    }
+  ]
+}

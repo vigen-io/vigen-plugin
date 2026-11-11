@@ -1,0 +1,52 @@
+{
+  "about": "The koi looks this template films in, made with the image-gen skill's formula (SKILL.md § 3): image 1 = a crop of the koi's head, image 2 = the look's `shot`, the prompt below with the look's `hair` line. One standard 1K image per look (four looks at most); `{{length}}` in each `hair` line is the koi's own hair said outright, measured against the shot (\"a shoulder-length bob that ends at the shoulders, much shorter than the hair in image 2\"): \"keeps its own length\" alone lets the shot's hairstyle win; save each with `vigen.mjs koi add-look <koiDir> --template garden-storytime --look <name> --frame <file>`. `{{outfit}}` is the koi's own clothes from their photo (image-gen SKILL.md § 3), finished with plain pieces for what the photo doesn't show (the lying and seated looks are full-length), the same sentence in all four looks; the shots' lilac knit and jeans only when the user asks for them. `subTop` / `hookTop` are where words sit on that look (fraction of the height). `reframes` are setups filmed from another look in the edit, not generated.",
+  "image": {
+    "aspect": "9:16",
+    "size": "1K",
+    "model": "standard"
+  },
+  "prompt": "Recreate image 2 as a new photo, with the person from image 1 in it. Image 1 is only a reference for who the person is (a close-up of their head): ignore anything else in it. The result is image 2's scene, with its person replaced.\n\nCopy image 2 for everything about the shot: the camera angle and height, the distance and framing (how big the person is in the frame and where they sit in it), the pose, the hands and what they hold, the set and props, and the colour, light and film look: match image 2's colours, brightness and softness exactly.\n\nTake only the person's identity from image 1: their face, skin tone, build, and their hair's length, cut and colour. It must clearly be the person in image 1, not the person in image 2. The hair keeps its own length and cut, {{hair}}.\n\nOutfit: {{outfit}}. They wear this, not the clothes of the person in image 2, fitted naturally to image 2's pose.\n\nThe face is fully visible and sharp, lips gently closed with a calm, pleasant expression (no teeth showing), eyes looking into the lens. The phone never covers the mouth. Exactly one person. No text, no captions, no drawings, no logos, no app interface, no watermark. Photorealistic, vertical 9:16.",
+  "looks": [
+    {
+      "name": "overhead",
+      "shot": "shots/overhead.jpg",
+      "hair": "{{length}}, lying smoothly on the grass close around the head in soft, glossy strands, fanned out a little (not spiky, not frizzy, not sticking up), with the lawn visible around it",
+      "use": "the hook and the problem: lying in the grass, talking up to the camera",
+      "share": 0.33,
+      "subTop": 0.62,
+      "hookTop": 0.16
+    },
+    {
+      "name": "overhead-b",
+      "shot": "shots/overhead-b.jpg",
+      "hair": "{{length}}, lying smoothly on the grass close around the head in soft, glossy strands, with the lawn visible around it",
+      "use": "the second angle of the lying shot: the cut in the middle of the hook, and the framework reveal",
+      "share": 0.12,
+      "subTop": 0.62,
+      "hookTop": 0.68
+    },
+    {
+      "name": "wide",
+      "shot": "shots/wide.jpg",
+      "hair": "{{length}}, neat, smooth and glossy",
+      "use": "the list and the explanation: seated in the garden, small in the frame, with room above for drawings",
+      "share": 0.42,
+      "subTop": 0.74
+    },
+    {
+      "name": "low",
+      "shot": "shots/low.jpg",
+      "hair": "{{length}}, neat, smooth and glossy",
+      "use": "the sign-off: a low-angle close-up against the sky",
+      "share": 0.09,
+      "subTop": 0.2
+    }
+  ],
+  "reframes": {
+    "medium": {
+      "look": "wide",
+      "framing": "tight",
+      "use": "the payoff line: closer, holding an apple"
+    }
+  }
+}

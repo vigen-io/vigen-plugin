@@ -1,0 +1,106 @@
+<!-- Cách cũ → cách mới. Zoomed in: the old route as one straight row (Người → AI thực thi). The view zooms out, the
+     direct arrow is crossed out, and a branch grows down from the same "Bạn" node into "AI trung gian", which pops
+     out a prompt (placeholder lines — the script never says what it is). The prompt slides along the arrow into
+     "AI thực thi", which turns it into the real work: an image, a video, a script. The middle step lights up on
+     "bước ở giữa" and gets a key on "chìa khóa". -->
+<style>
+  .wy-world { position: absolute; left: 0; top: 0; width: 929px; height: 441px; transform-origin: 366px 96px; transform: translate(98px, 124px) scale(1.3); }
+  .wy-tag { position: absolute; padding: 9px 16px; border-radius: 13px; font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 26px;
+    line-height: 1; color: #fff; background: rgba(255,255,255,0.16); white-space: nowrap; opacity: 0; }
+  .wy-tag.new { background: #0E78D0; }
+  .wy-node { position: absolute; width: 112px; opacity: 0; }
+  .wy-disc { width: 112px; height: 112px; border-radius: 50%; background: #fff; border: 7px solid rgba(255,255,255,0.9); box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center; font-family: "Be Vietnam Pro"; font-weight: 900; font-size: 40px; color: #0A1F6E;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.3); }
+  .wy-node.hi .wy-disc { border-color: #0E78D0; box-shadow: 0 0 0 10px rgba(14,120,208,0.28), 0 12px 30px rgba(0,0,0,0.3); }
+  .wy-lbl { margin: 8px -60px 0; text-align: center; font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 24px; line-height: 1.1; color: #fff; white-space: nowrap; }
+  .wy-node.hi .wy-lbl { color: #5fb4ff; }
+  .wy-seg { position: absolute; background: #0E78D0; border-radius: 6px; }
+  .wy-h { height: 12px; transform-origin: 0 50%; transform: scaleX(0); }
+  .wy-v { width: 12px; transform: scaleY(0); }
+  .wy-head { position: absolute; width: 0; height: 0; opacity: 0; }
+  .wy-head.r { border-top: 17px solid transparent; border-bottom: 17px solid transparent; border-left: 24px solid #0E78D0; }
+  .wy-head.u { border-left: 17px solid transparent; border-right: 17px solid transparent; border-bottom: 24px solid #0E78D0; }
+  .wy-badge { position: absolute; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.35); opacity: 0; }
+  .wy-prompt { position: absolute; left: 418px; top: 222px; width: 104px; height: 80px; padding: 10px 12px; box-sizing: border-box; border-radius: 14px;
+    background: #fff; box-shadow: 0 0 0 5px rgba(95,180,255,0.45), 0 12px 26px rgba(0,0,0,0.35); opacity: 0; }
+  .wy-prompt b { display: block; font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 15px; line-height: 1; color: #0E78D0; margin-bottom: 8px; }
+  .wy-prompt i { display: block; height: 7px; margin-top: 7px; border-radius: 4px; background: #0A1F6E; opacity: 0.18; }
+  .wy-out { position: absolute; left: 740px; width: 96px; height: 96px; border-radius: 18px; background: #fff; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px; box-shadow: 0 12px 26px rgba(0,0,0,0.35); opacity: 0; }
+  .wy-out span { font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 16px; line-height: 1; color: #0A1F6E; white-space: nowrap; }
+</style>
+<div class="wy-world" id="wy-world">
+  <!-- old route: one straight row -->
+  <div id="wy-old">
+    <div class="wy-tag" id="wy-t1" style="left:310px;top:22px">Cách cũ</div>
+    <div class="wy-seg wy-h" id="wy-oa" style="left:184px;top:90px;width:352px"></div>
+    <div class="wy-head r" id="wy-oah" style="left:532px;top:79px"></div>
+  </div>
+  <div class="wy-badge" id="wy-x" style="left:342px;top:68px;background:#FF4D5E"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></div>
+  <!-- new route: down from Người, through AI trung gian, back up into AI thực thi -->
+  <div class="wy-seg wy-v" id="wy-b1" style="left:110px;top:202px;height:122px;transform-origin:50% 0"></div>
+  <div class="wy-seg wy-h" id="wy-b2" style="left:110px;top:312px;width:182px"></div>
+  <div class="wy-head r" id="wy-b2h" style="left:290px;top:301px"></div>
+  <div class="wy-tag new" id="wy-t2" style="left:136px;top:256px">Cách mới</div>
+  <div class="wy-seg wy-h" id="wy-b3" style="left:422px;top:312px;width:200px"></div>
+  <div class="wy-seg wy-v" id="wy-b4" style="left:610px;top:220px;height:104px;transform-origin:50% 100%"></div>
+  <div class="wy-head u" id="wy-b4h" style="left:599px;top:198px"></div>
+  <!-- nodes -->
+  <div class="wy-node" id="wy-me" style="left:60px;top:40px"><div class="wy-disc">BẠN</div><div class="wy-lbl">Người</div></div>
+  <div class="wy-node" id="wy-ai" style="left:560px;top:40px"><div class="wy-disc">AI</div><div class="wy-lbl">AI thực thi</div></div>
+  <div class="wy-node hi" id="wy-mid" style="left:310px;top:262px"><div class="wy-disc">AI</div><div class="wy-lbl">AI trung gian</div></div>
+  <!-- the prompt the middle AI writes, travelling to the executor -->
+  <div class="wy-prompt" id="wy-prompt"><b>Prompt</b><i style="width:100%"></i><i style="width:82%"></i><i style="width:58%"></i></div>
+  <!-- what the executor makes from it -->
+  <div class="wy-out" id="wy-o1" style="top:0">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0E78D0" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span>Ảnh</span>
+  </div>
+  <div class="wy-out" id="wy-o2" style="top:112px">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0E78D0" stroke-width="2" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z" fill="#0E78D0"/></svg><span>Video</span>
+  </div>
+  <div class="wy-out" id="wy-o3" style="top:224px">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0E78D0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg><span>Kịch bản</span>
+  </div>
+  <div class="wy-badge" id="wy-key" style="left:390px;top:246px;background:#FFC531"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0A1F6E" stroke-width="2.4" stroke-linecap="round"><circle cx="8" cy="8" r="4.5"/><path d="M11.2 11.2 20 20M16.5 16.5l2.5-2.5M18.5 18.5l2-2"/></svg></div>
+</div>
+<script>
+  const q = (s) => CARD + " " + s;
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  const pop = (s, t) => at(s, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1 }, t, 0.35, "back.out(1.8)");
+  // "cách cũ là mình đi thẳng từ người sang AI" — zoomed in on one straight row
+  at("#wy-t1", { opacity: 0, y: -10 }, { opacity: 1, y: 0 }, 69.45);
+  pop("#wy-me", 70.76);
+  at("#wy-oa", { scaleX: 0 }, { scaleX: 1 }, 70.9, 0.32);
+  at("#wy-oah", { opacity: 0 }, { opacity: 1 }, 71.18, 0.08, "none");
+  pop("#wy-ai", 71.26);
+  // "giờ mình đi…": zoom out, cross the direct route out
+  at("#wy-world", { x: 98, y: 124, scale: 1.3 }, { x: 0, y: 0, scale: 1 }, 71.6, 0.7, "power2.inOut");
+  at("#wy-x", { opacity: 0, scale: 0.3, rotation: -60 }, { opacity: 1, scale: 1, rotation: 0 }, 71.8, 0.35, "back.out(2)");
+  at("#wy-old", { opacity: 1 }, { opacity: 0.4 }, 71.9, 0.3, "power1.out");
+  // "…từ người qua một con AI trung gian": the branch grows down out of the same node
+  at("#wy-b1", { scaleY: 0 }, { scaleY: 1 }, 71.98, 0.24, "power1.in");
+  at("#wy-b2", { scaleX: 0 }, { scaleX: 1 }, 72.22, 0.26, "power1.out");
+  at("#wy-b2h", { opacity: 0 }, { opacity: 1 }, 72.46, 0.08, "none");
+  at("#wy-t2", { opacity: 0, y: 10 }, { opacity: 1, y: 0 }, 72.1);
+  pop("#wy-mid", 72.74);
+  // "…để nó tối ưu hóa": the middle AI pops out a prompt
+  at("#wy-mid", { scale: 1 }, { scale: 1.08 }, 73.6, 0.15, "power2.out");
+  at("#wy-mid", { scale: 1.08 }, { scale: 1 }, 73.75, 0.25, "power2.inOut");
+  at("#wy-prompt", { opacity: 0, x: -104, y: 56, scale: 0.3 }, { opacity: 1, x: 0, y: 0, scale: 1 }, 73.7, 0.42, "back.out(1.6)");
+  // "…rồi mới tới con AI thực thi": the arrow leads on, the prompt rides it into the executor
+  at("#wy-b3", { scaleX: 0 }, { scaleX: 1 }, 74.5, 0.22, "power1.in");
+  at("#wy-b4", { scaleY: 0 }, { scaleY: 1 }, 74.72, 0.18, "power1.out");
+  at("#wy-b4h", { opacity: 0 }, { opacity: 1 }, 74.88, 0.08, "none");
+  at("#wy-prompt", { x: 0, y: 0 }, { x: 146, y: 0 }, 74.75, 0.28, "power1.inOut");
+  at("#wy-prompt", { x: 146, y: 0, scale: 1, opacity: 1 }, { x: 146, y: -150, scale: 0.35, opacity: 0 }, 75.03, 0.28, "power2.in");
+  // "…thực thi": the executor turns it into real work
+  at("#wy-ai", { scale: 1 }, { scale: 1.12 }, 75.3, 0.15, "power2.out");
+  at("#wy-ai", { scale: 1.12 }, { scale: 1 }, 75.45, 0.3, "power2.inOut");
+  [["#wy-o1", -172, 48, 75.42], ["#wy-o2", -172, -64, 75.56], ["#wy-o3", -172, -176, 75.7]].forEach(([s, x, y, t]) =>
+    at(s, { opacity: 0, x, y, scale: 0.3 }, { opacity: 1, x: 0, y: 0, scale: 1 }, t, 0.4, "back.out(1.5)"));
+  // "cái bước ở giữa này á, chính là chìa khóa"
+  at("#wy-mid", { scale: 1 }, { scale: 1.14 }, 76.35, 0.4, "back.out(1.6)");
+  at("#wy-key", { opacity: 0, scale: 0.3, rotation: -40 }, { opacity: 1, scale: 1, rotation: 0 }, 77.9, 0.4, "back.out(2)");
+</script>

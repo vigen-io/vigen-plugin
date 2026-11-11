@@ -1,0 +1,67 @@
+<!-- The framework, on the lying shot (overhead looks): four nodes join into a square ("…a structure that connected
+     them"), a hand-lettered number + word ("so I started thinking in four pillars"), then one sketchy box per
+     part popping in on its word, kept to the card's end. Change the label texts and retime STRUCT / NUM / AT to
+     the words (video seconds); fewer parts: delete the extra box + label and their AT entries. Place it with the
+     shots layout "over". Its region (y 230–540) stays clear of the face on the overhead looks. -->
+<style>
+  @font-face { font-family: "Patrick Hand"; src: url("assets/fonts/PatrickHand-Regular.ttf"); }
+  @font-face { font-family: "Playfair Display"; src: url("assets/fonts/PlayfairDisplay.ttf"); }
+  .pl-ink { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35)); }
+  .pl-ink path, .pl-ink circle, .pl-ink line { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .pl-num { position: absolute; left: 0; width: 1080px; text-align: center; font-family: "Patrick Hand"; color: transparent;
+    -webkit-text-stroke: 4px #fff; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35)); line-height: 1; opacity: 0; }
+  #pl-n1 { top: 200px; font-size: 230px; }
+  #pl-n2 { top: 420px; font-size: 118px; letter-spacing: 0.04em; }
+  .pl-lbl { position: absolute; width: 420px; height: 118px; display: flex; align-items: center; justify-content: center;
+    font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 46px; color: #fff; letter-spacing: -0.01em;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); opacity: 0; }
+</style>
+<svg class="pl-ink" viewBox="0 0 1080 1920">
+  <g id="pl-struct">
+    <circle id="pl-c1" cx="430" cy="240" r="24" pathLength="1" />
+    <circle id="pl-c2" cx="650" cy="240" r="24" pathLength="1" />
+    <circle id="pl-c3" cx="650" cy="440" r="24" pathLength="1" />
+    <circle id="pl-c4" cx="430" cy="440" r="24" pathLength="1" />
+    <line id="pl-l1" x1="454" y1="240" x2="626" y2="240" pathLength="1" />
+    <line id="pl-l2" x1="650" y1="264" x2="650" y2="416" pathLength="1" />
+    <line id="pl-l3" x1="626" y1="440" x2="454" y2="440" pathLength="1" />
+    <line id="pl-l4" x1="430" y1="416" x2="430" y2="264" pathLength="1" />
+  </g>
+  <path id="pl-b1" d="M98 258 L503 265 L504 382 L77 376 L78 256 L124 258" pathLength="1" />
+    <path id="pl-b2" d="M598 265 L998 264 L997 378 L582 383 L584 256 L624 264" pathLength="1" />
+    <path id="pl-b3" d="M98 414 L504 410 L502 534 L83 532 L77 406 L124 406" pathLength="1" />
+    <path id="pl-b4" d="M598 410 L997 416 L1003 526 L578 528 L582 406 L624 413" pathLength="1" />
+</svg>
+<div class="pl-num" id="pl-n1">4</div>
+<div class="pl-num" id="pl-n2">Pillars</div>
+<div class="pl-lbl" id="pl-t1" style="left:80px;top:262px">rest</div>
+<div class="pl-lbl" id="pl-t2" style="left:580px;top:262px">focus</div>
+<div class="pl-lbl" id="pl-t3" style="left:80px;top:412px">people</div>
+<div class="pl-lbl" id="pl-t4" style="left:580px;top:412px">play</div>
+<script>
+  const q = (s) => CARD + " " + s;
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  // a stroke drawing itself, as by hand
+  const draw = (s, t, d = 0.4) => at(s, { strokeDashoffset: 1 }, { strokeDashoffset: 0 }, t, d, "power1.inOut");
+  const gone = (s, t, d = 0.25) => at(s, { opacity: 1 }, { opacity: 0 }, t, d, "power1.in");
+  // ── retime to the words (video seconds) ──
+  const STRUCT = S + 0.1;                           // "…a structure that connected them"
+  const NUM = S + 2.4;                              // "four pillars"
+  const AT = [S + 4.0, S + 5.0, S + 6.0, S + 7.0];  // each part's name
+
+  // nodes, then the lines joining them
+  [1, 2, 3, 4].forEach((i) => draw(`#pl-c${i}`, STRUCT + 0.12 * (i - 1), 0.3));
+  [1, 2, 3, 4].forEach((i) => draw(`#pl-l${i}`, STRUCT + 0.55 + 0.22 * (i - 1), 0.24));
+  gone("#pl-struct", NUM - 0.25);
+  // the number writes itself left to right, then the word
+  at("#pl-n1", { opacity: 1, clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)" }, NUM, 0.35, "power1.out");
+  at("#pl-n2", { opacity: 1, clipPath: "inset(0% 100% 0% 0%)" }, { clipPath: "inset(0% 0% 0% 0%)" }, NUM + 0.35, 0.55, "power1.out");
+  gone("#pl-n1, " + q("#pl-n2"), AT[0] - 0.2, 0.2);
+  // one box per part: drawn, then its word
+  AT.forEach((t, i) => {
+    draw(`#pl-b${i + 1}`, t - 0.1, 0.35);
+    at(`#pl-t${i + 1}`, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1 }, t + 0.12, 0.22, "back.out(2)");
+  });
+</script>

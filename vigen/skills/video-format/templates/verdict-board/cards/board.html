@@ -1,0 +1,88 @@
+<!-- The verdict board: three tier labels (HURTS / NO EFFECT / HELPS) with empty slots under them, on screen from the
+     first frame to the last. Each item's icon pops onto a big white card on the chest when its question starts
+     ("Charging overnight?"), stays through the verdict and the reason, then flies up into the next free slot of
+     its tier as the reason ends; the next item's card pops in on its question. Measured from the reference at
+     1080×1920: labels 270×96 at y 276, slots 78 px at y 404 (step 91), the card 250 px at y 1128 (here 1158:
+     the template's seated shot sits lower, and the chin must stay clear at the punch-in).
+
+     Copy into the project's cards/ and edit only the three lists below: TIERS (names and colours), SLOTS (empty
+     slots per tier, = the most items any tier gets) and ITEMS (one per habit, in order, times on the video
+     clock from transcript.json). Place it as a viz-cards html card spanning the whole video, "bg": "transparent",
+     cards.json "size": { "w": 1080, "h": 1920 }, with the shots layout "over".
+     Icons: flat colour SVGs, one per item, in assets/media/icons/ (FORMAT.md § 2). -->
+<style>
+  .vb-lbl { position: absolute; top: 276px; width: 270px; height: 96px; display: flex; align-items: center; justify-content: center;
+    font-family: "Be Vietnam Pro"; font-weight: 900; font-size: 40px; letter-spacing: 0.03em; color: #fff; white-space: nowrap;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28); text-shadow: 0 2px 3px rgba(0, 0, 0, 0.25); }
+  .vb-div { position: absolute; top: 385px; width: 3px; height: 235px; border-radius: 2px; background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+  .vb-slot { position: absolute; width: 78px; height: 78px; box-sizing: border-box; border-radius: 16px;
+    background: rgba(255, 255, 255, 0.16); border: 2px solid rgba(255, 255, 255, 0.3); }
+  .vb-card { position: absolute; left: 415px; top: 1158px; width: 250px; height: 250px; border-radius: 56px; background: #fff;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.3); opacity: 0;
+    transform-origin: 50% 50%; }
+  .vb-card img { width: 58%; height: 58%; object-fit: contain; }
+  .vb-pill { padding: 10px 26px; border-radius: 40px; background: #2E9BEF; color: #fff; font-family: "Be Vietnam Pro"; font-weight: 800;
+    font-size: 40px; letter-spacing: 0.01em; }
+  .vb-badge { position: absolute; right: -26px; bottom: -22px; padding: 4px 16px 6px; border-radius: 30px; background: #2AA046;
+    border: 5px solid #fff; color: #fff; font-family: "Be Vietnam Pro"; font-weight: 900; font-size: 40px; white-space: nowrap; opacity: 0; }
+</style>
+<div class="vb" id="vb"></div>
+<script>
+  // ── edit these ──
+  const TIERS = [
+    { name: "HURTS", color: "#A8001E" },
+    { name: "NO EFFECT", color: "#CC9E0C" },
+    { name: "HELPS", color: "#3AAA35" },
+  ];
+  const SLOTS = 3;
+  // tier: 0 | 1 | 2 (index in TIERS). in: the question's first word. fly: the reason's last word ends (lands
+  // 0.2 s later, on a camera reframe). badge: a pill on the card ("80%"), popping at badgeAt (default: with
+  // the card). merge: lands on the previous item's slot, covering it (a follow-up on the same habit). pill
+  // instead of icon: a text button (the CTA's "follow"). extra: lands in a new row under its tier, glowing.
+  // These are the reference's own times: retime every one to the project's transcript.json.
+  const ITEMS = [
+    { icon: "assets/media/icons/electric-plug.svg", tier: 1, in: 0.0, fly: 4.7 },
+    { icon: "assets/media/icons/mobile-phone.svg", tier: 1, in: 5.05, fly: 8.95 },
+    { icon: "assets/media/icons/battery.svg", tier: 2, in: 9.0, fly: 15.6 },
+    { icon: "assets/media/icons/battery.svg", tier: 2, in: 16.95, fly: 30.65, badge: "80%", merge: true },
+    { icon: "assets/media/icons/electric-plug.svg", tier: 0, in: 30.85, fly: 32.8 },
+    { icon: "assets/media/icons/thermometer.svg", tier: 0, in: 33.05, fly: 36.4 },
+    { icon: "assets/media/icons/low-battery.svg", tier: 2, in: 36.6, fly: 38.7 },
+    { icon: "assets/media/icons/high-voltage.svg", tier: 1, in: 38.9, fly: 46.7 },
+    { icon: "assets/media/icons/crescent-moon.svg", tier: 2, in: 46.85, fly: 59.55 },
+    { icon: "assets/media/icons/low-battery.svg", tier: 0, in: 59.65, fly: 68.55 },
+    { pill: "follow", tier: 2, in: 68.8, fly: 73.45, extra: true },
+  ];
+  // ── the board ──
+  const q = (s) => CARD + " " + s;
+  const root = document.querySelector(q("#vb"));
+  const colX = (k) => 90 + 315 * k, slotX = (k, n) => colX(k) + 5 + 91 * n, slotY = (row) => 404 + 88 * row;
+  const el = (cls, css, html = "") => { const d = document.createElement("div"); d.className = cls; Object.assign(d.style, css); d.innerHTML = html; root.appendChild(d); return d; };
+  TIERS.forEach((t, k) => {
+    el("vb-lbl", { left: `${colX(k)}px`, background: t.color }, t.name);
+    if (k) el("vb-div", { left: `${colX(k) - 24}px` });
+    for (let n = 0; n < SLOTS; n++) el("vb-slot", { left: `${slotX(k, n)}px`, top: `${slotY(0)}px` });
+  });
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  // each item: a card on the chest that pops in on its question and flies to its slot as the reason ends
+  const used = TIERS.map(() => 0), cx = 540, cy = 1283, scale = 78 / 250;
+  let last = null;
+  ITEMS.forEach((it, i) => {
+    let slot;
+    if (it.merge && last) slot = last;
+    else if (it.extra) slot = { x: slotX(it.tier, 0) + 39, y: slotY(1) + 39 };
+    else { const k = used[it.tier]++; slot = { x: slotX(it.tier, k % SLOTS) + 39, y: slotY(Math.floor(k / SLOTS)) + 39 }; }
+    last = slot;
+    const card = el("vb-card", {}, it.pill ? `<div class="vb-pill">${it.pill}</div>` : `<img src="${it.icon}">`);
+    card.id = `vb-c${i}`;
+    if (it.badge) card.insertAdjacentHTML("beforeend", `<div class="vb-badge" id="vb-b${i}">${it.badge}</div>`);
+    at(`#vb-c${i}`, { opacity: 0, scale: 0.82, filter: "blur(10px)" }, { opacity: 1, scale: 1, filter: "blur(0px)" }, it.in, 0.2);
+    if (it.badge) at(`#vb-b${i}`, { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1 }, it.badgeAt ?? it.in + 0.05, 0.3, "back.out(2.2)");
+    at(`#vb-c${i}`, { x: 0, y: 0, scale: 1 }, { x: slot.x - cx, y: slot.y - cy, scale }, it.fly, 0.2, "power2.inOut");
+    if (it.extra) {
+      const c = TIERS[it.tier].color;
+      at(`#vb-c${i}`, { boxShadow: "0 14px 34px rgba(0,0,0,0.3)" }, { boxShadow: `0 0 0 8px ${c}, 0 0 46px 14px ${c}` }, it.fly + 0.2, 0.3);
+    }
+  });
+</script>

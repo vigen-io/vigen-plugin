@@ -1,0 +1,29 @@
+<!-- The hook's question label: a red starburst and a black bar of heavy white capitals ("HOW TO CREATE THIS?"),
+     pinned to the bottom edge of the presenter's half for the whole hook (frame 0 to the cut into the
+     walkthrough). No entrance, no exit: it is there from the first frame and goes on the cut. Change the
+     question (≤ 22 characters, a question mark) and nothing else; the bar hugs the text. Place it full frame
+     with the shots layout "over", start 0, end = the hook's end. -->
+<style>
+  .lb { position: absolute; left: 152px; top: 757px; height: 81px; display: flex; align-items: center; opacity: 0; }
+  .lb-star { position: relative; z-index: 1; width: 80px; height: 80px; flex: none; }
+  .lb-bar { margin-left: -42px; height: 81px; display: flex; align-items: center; padding: 0 22px 0 66px; background: #000;
+    font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 58px; letter-spacing: -0.05em; color: #fff;
+    text-transform: uppercase; white-space: nowrap; }
+</style>
+<div class="lb" id="lb">
+  <svg class="lb-star" viewBox="-50 -50 100 100"><polygon id="lb-poly" fill="#F0141E" points="" /></svg>
+  <div class="lb-bar">How to create this?</div>
+</div>
+<script>
+  const q = (s) => CARD + " " + s;
+  // a 12-point starburst, slightly uneven like a hand-cut sticker
+  const pts = [];
+  for (let i = 0; i < 24; i++) {
+    const a = (i / 24) * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 21 : (i % 4 ? 47 : 41);
+    pts.push(`${(Math.cos(a) * r).toFixed(1)},${(Math.sin(a) * r).toFixed(1)}`);
+  }
+  document.querySelector(q("#lb-poly")).setAttribute("points", pts.join(" "));
+  // ── retime ──
+  const SHOW = S;   // from the first frame (the card starts at 0)
+  tl.set(q("#lb"), { opacity: 1 }, SHOW);
+</script>

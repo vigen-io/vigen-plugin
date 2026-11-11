@@ -1,0 +1,37 @@
+<!-- "…muốn lấy trọn bộ bí kíp này kèm hướng dẫn sử dụng chi tiết": the Master Prompt file and a usage guide stack in
+     side by side under a "Trọn bộ" ribbon. -->
+<style>
+  .tb-tile { position: absolute; top: 120px; width: 340px; height: 196px; box-sizing: border-box; border-radius: 26px; background: #fff; padding: 26px 28px;
+    box-shadow: 0 14px 34px rgba(0,0,0,0.35); opacity: 0; }
+  .tb-ic { width: 64px; height: 74px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+  .tb-tile b { display: block; margin-top: 16px; font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 28px; line-height: 1.1; color: #0A1F6E; white-space: nowrap; }
+  .tb-tile i { position: absolute; right: 28px; height: 9px; border-radius: 5px; background: #0A1F6E; opacity: 0.14; }
+  .tb-rib { position: absolute; left: 0; right: 0; top: 30px; text-align: center; opacity: 0; }
+  .tb-rib span { display: inline-flex; align-items: center; gap: 10px; height: 58px; padding: 0 26px; border-radius: 29px; background: #FFC531;
+    font-family: "Be Vietnam Pro"; font-weight: 900; font-size: 30px; color: #0A1F6E; box-shadow: 0 8px 22px rgba(0,0,0,0.35); }
+  .tb-plus { position: absolute; left: 444px; top: 190px; width: 44px; height: 44px; border-radius: 50%; background: #5fb4ff; display: flex;
+    align-items: center; justify-content: center; opacity: 0; }
+</style>
+<div class="tb-rib" id="tb-rib"><span><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A1F6E" stroke-width="2.6" stroke-linecap="round"><circle cx="8" cy="8" r="4.5"/><path d="M11.2 11.2 20 20M16.5 16.5l2.5-2.5M18.5 18.5l2-2"/></svg>Trọn bộ bí kíp</span></div>
+<div class="tb-tile" id="tb-a" style="left:90px;transform:rotate(-4deg)">
+  <div class="tb-ic" style="background:#0E78D0"><svg width="36" height="42" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+  <b>Master Prompt</b>
+  <i style="top:40px;width:150px"></i><i style="top:60px;width:120px"></i>
+</div>
+<div class="tb-plus" id="tb-plus"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0A1F6E" stroke-width="3.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></div>
+<div class="tb-tile" id="tb-b" style="left:500px;transform:rotate(4deg)">
+  <div class="tb-ic" style="background:#22C55E"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h5v17H6a2 2 0 0 0-2 2Z"/><path d="M20 5a2 2 0 0 0-2-2h-5v17h5a2 2 0 0 1 2 2Z"/></svg></div>
+  <b>Hướng dẫn sử dụng</b>
+  <i style="top:40px;width:130px"></i><i style="top:60px;width:100px"></i>
+</div>
+<script>
+  const q = (s) => CARD + " " + s;
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  // "…anh em nào muốn lấy" — the file
+  at("#tb-a", { opacity: 0, scale: 0.7, rotation: -12 }, { opacity: 1, scale: 1, rotation: -4 }, 90.9, 0.4, "back.out(1.6)");
+  // "trọn bộ bí kíp này"
+  at("#tb-rib", { opacity: 0, y: -16, scale: 0.8 }, { opacity: 1, y: 0, scale: 1 }, 91.44, 0.35, "back.out(2)");
+  // "kèm hướng dẫn sử dụng chi tiết"
+  at("#tb-plus", { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1 }, 92.25, 0.25, "back.out(2)");
+  at("#tb-b", { opacity: 0, scale: 0.7, rotation: 12 }, { opacity: 1, scale: 1, rotation: 4 }, 92.38, 0.4, "back.out(1.6)");
+</script>

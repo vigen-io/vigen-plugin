@@ -1,0 +1,20 @@
+{
+  "about": "Optional: quick-take works with the koi's own photo as it is. When the user wants it, the koi is reformed into the template's presenter shot with the image-gen skill's formula (SKILL.md § 3): image 1 = a crop of the koi's head, image 2 = `shots/presenter.jpg` (a green-screen studio: the edit keys the green onto the template's backgrounds), the prompt below with the look's `hair` line and `{{outfit}}` = the koi's own clothes from their photo (image-gen SKILL.md § 3), never green (the edit keys the green out; a green top becomes the nearest non-green colour, said to the user); the shot's black tee only when the user asks for it. One standard 1K image; save it with `vigen.mjs koi add-look <koiDir> --template quick-take --look presenter --frame <file>` and lipsync every part with `--look quick-take-presenter`.",
+  "optional": true,
+  "image": {
+    "aspect": "9:16",
+    "size": "1K",
+    "model": "standard"
+  },
+  "prompt": "Recreate image 2 as a new photo, with the person from image 1 in it. Image 1 is only a reference for who the person is (a close-up of their head): ignore anything else in it. The result is image 2's scene, with its person replaced.\n\nCopy image 2 for everything about the shot: the camera angle and height, the distance and framing (how big the person is in the frame and where they sit in it), the pose, the hands and what they hold, the set and props, and the colour, light and film look: match image 2's colours, brightness and softness exactly.\n\nTake only the person's identity from image 1: their face, skin tone, build, and their hair's length, cut and colour. It must clearly be the person in image 1, not the person in image 2. The hair keeps its own length and cut, {{hair}}.\n\nOutfit: {{outfit}}. They wear this, not the clothes of the person in image 2, fitted naturally to image 2's pose.\n\nThe face is fully visible and sharp, lips gently closed with a calm, pleasant expression (no teeth showing), eyes looking into the lens. The phone never covers the mouth. Exactly one person. No text, no captions, no drawings, no logos, no app interface, no watermark. Photorealistic, vertical 9:16.",
+  "looks": [
+    {
+      "name": "presenter",
+      "shot": "shots/presenter.jpg",
+      "hair": "neat, smooth and glossy",
+      "use": "every part: the presenter, split, card and pip layouts all come from this take",
+      "share": 1.0,
+      "subTop": 0.69
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+<!-- Audience growth ("…you need an audience"): a light-grey screen with a social-profile card sliding in from the
+     right, the presenter's own face in the avatar, the follower count racing up while the line is said. No
+     platform's name, logo or colours: grey placeholder bars stand in for the bio and buttons. The subtitle
+     stays on, dark, centred below the card (shots "subColor"). Measured at 1080×1920: the screen #F3F3F3, the
+     card x 54 · y 518 · 972 × 302, radius 28, white with a soft shadow; avatar 150 px; numbers 44 px Inter
+     Bold; slide-in 0.25 s; the count runs ≈ 1.2 s.
+
+     Copy into the project's cards/, edit AVATAR (a square crop of the koi's face in assets/media/), the three
+     stats and the count's times, retimed to transcript.json. Place it with the shots layout "full",
+     "subColor": "#111111". -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 100 900; src: url("assets/fonts/Inter.ttf"); }
+  .pf-root { position: absolute; inset: 0; background: #F3F3F3; font-family: "Inter"; }
+  .pf-card { position: absolute; left: 54px; top: 518px; width: 972px; height: 302px; border-radius: 28px; background: #FDFDFD;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06); }
+  .pf-av { position: absolute; left: 34px; top: 76px; width: 150px; height: 150px; border-radius: 50%; object-fit: cover; background: #ddd; }
+  .pf-bar { position: absolute; height: 16px; border-radius: 8px; background: #E3E4E7; }
+  .pf-btn { position: absolute; top: 224px; width: 150px; height: 44px; border-radius: 12px; background: #EBEBED; }
+  .pf-n { position: absolute; top: 64px; font-size: 44px; font-weight: 700; letter-spacing: -0.01em; color: #111; line-height: 1; }
+  .pf-l { position: absolute; top: 114px; font-size: 22px; font-weight: 500; color: #555; }
+</style>
+<div class="pf-root">
+  <div class="pf-card" id="pf-card">
+    <img class="pf-av" id="pf-av" alt="" />
+    <div class="pf-bar" style="left:214px;top:34px;width:260px;background:#D5D6DA"></div>
+    <div class="pf-n" id="pf-posts" style="left:214px"></div>
+    <div class="pf-bar" style="left:214px;top:116px;width:90px;background:#D5D6DA;height:12px"></div>
+    <div class="pf-n" id="pf-fol" style="left:338px"></div>
+    <div class="pf-l" style="left:338px">followers</div>
+    <div class="pf-n" id="pf-ing" style="left:491px"></div>
+    <div class="pf-bar" style="left:491px;top:116px;width:90px;background:#D5D6DA;height:12px"></div>
+    <div class="pf-bar" style="left:214px;top:156px;width:420px"></div>
+    <div class="pf-bar" style="left:214px;top:190px;width:330px"></div>
+    <div class="pf-btn" style="left:214px"></div>
+    <div class="pf-btn" style="left:378px"></div>
+  </div>
+</div>
+<script>
+  // ── edit these (video seconds) ──
+  const AVATAR = "assets/media/avatar.jpg";
+  const POSTS = 48, FOLLOWING = 211;
+  const FROM = 579, TO = 4870, COUNT_AT = S + 0.1, COUNT_END = S + 1.3;
+
+  const q = (s) => CARD + " " + s;
+  document.querySelector(q("#pf-av")).src = AVATAR;
+  document.querySelector(q("#pf-posts")).textContent = POSTS.toLocaleString("en-US");
+  document.querySelector(q("#pf-ing")).textContent = FOLLOWING.toLocaleString("en-US");
+  const fol = document.querySelector(q("#pf-fol"));
+  fol.textContent = FROM.toLocaleString("en-US");
+  tl.fromTo(q("#pf-card"), { x: 760 }, { x: 0, duration: 0.25, ease: "expo.out", immediateRender: false }, S);
+  const n = { v: FROM };
+  tl.fromTo(n, { v: FROM }, { v: TO, duration: COUNT_END - COUNT_AT, ease: "power2.out", immediateRender: false,
+    onUpdate: () => (fol.textContent = Math.round(n.v).toLocaleString("en-US")) }, COUNT_AT);
+</script>

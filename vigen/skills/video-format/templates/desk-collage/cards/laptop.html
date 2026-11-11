@@ -1,0 +1,92 @@
+<!-- The desk: a hand-drawn paper laptop on the cutting mat, the presenter cut out as a sticker below it. What the
+     laptop's screen shows is the list SCREENS: the hook's result picture with lime word labels, a white blink, the
+     title card (the CTA keyword on a lime gradient), then the walkthrough's screens. Measured on the references at
+     1080x1920: the laptop 1080x830 at y 150, its screen hole 750x396 at (165, 207), r 18.
+
+     ONE file for every desk stretch: copy it into the project's cards/ and add one viz-cards html card per stretch
+     ({ "id": "desk1", "kind": "html", "file": "cards/laptop.html", "start": 0, "end": 3.04, "bg": "transparent" },
+     { "id": "desk2", … "start": 9.04, "end": 20.59 }). Each shows only the SCREENS whose `at` falls inside its own
+     start–end. Place each with the shots layout "card", rect = the whole frame (FORMAT.md § 1).
+     Needs assets/desk/laptop.png and the fonts in assets/fonts/ (FORMAT.md § 0). -->
+<style>
+  @font-face { font-family: "Archivo"; src: url("assets/fonts/Archivo.ttf"); font-weight: 100 900; }
+  @font-face { font-family: "Archivo"; src: url("assets/fonts/Archivo-Italic.ttf"); font-weight: 100 900; font-style: italic; }
+  @font-face { font-family: "Playfair Display"; src: url("assets/fonts/PlayfairDisplay.ttf"); font-weight: 400 900; }
+  .lp-screen { position: absolute; left: 165px; top: 207px; width: 750px; height: 396px; border-radius: 18px; overflow: hidden;
+    background: #f4f4f1; }
+  .lp-body { position: absolute; left: 0; top: 150px; width: 1080px; height: 830px; }
+  .lp-item { position: absolute; inset: 0; opacity: 0; }
+  .lp-item > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .lp-lbl { position: absolute; padding: 2px 16px 6px; background: #D4F842; white-space: nowrap; opacity: 0;
+    font-family: "Archivo"; font-style: italic; font-weight: 900; font-stretch: 112%; font-size: 52px; line-height: 1.05;
+    letter-spacing: -0.02em; color: #fff; -webkit-text-stroke: 8px #141414; paint-order: stroke fill; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12); }
+  .lp-title { background: linear-gradient(100deg, #EDFFC2 0%, #DDFE7A 42%, #C4FB2E 78%, #B6F51F 100%); }
+  .lp-title .dots { position: absolute; inset: 0; opacity: 0.18;
+    background-image: radial-gradient(rgba(0, 0, 0, 0.55) 1px, transparent 1.4px); background-size: 9px 9px; }
+  .lp-title .ttx, .lp-title .echo { position: absolute; left: 0; right: 0; text-align: center; white-space: nowrap;
+    font-family: "Archivo"; font-style: italic; font-weight: 900; letter-spacing: -0.035em; line-height: 1; }
+  .lp-title .ttx { color: #151515; }
+  .lp-title .echo { color: transparent; -webkit-text-stroke: 1.6px rgba(20, 20, 20, 0.55); }
+  .lp-title .kick { position: absolute; left: 0; right: 0; text-align: center; font-family: "Archivo"; font-weight: 700;
+    font-size: 26px; letter-spacing: -0.01em; color: #151515; }
+  .lp-title svg { position: absolute; opacity: 0; }
+  .lp-flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
+</style>
+<div class="lp-screen" id="lp-screen"><div class="lp-flash" id="lp-flash"></div></div>
+<img class="lp-body" src="assets/desk/laptop.png" alt="" />
+<script>
+  // ── edit this ──
+  // One entry per screen, in order, `at` on the video clock (transcript.json); each stays until the next one.
+  //   image: a picture filling the screen (`src`; `focus` = object-position). The hook's is the result the video
+  //          promises; `labels` are its words on lime stickers, popping in one by one on their words
+  //          ({ text, at, x, y, rot }: x/y = the label's left/top as fractions of the screen; `until` hides it).
+  //   title: the CTA keyword big on the lime card. A white blink comes 0.1 s before it, then the lime wipes in
+  //          from the right and the word slides in after it; sparkles pop. `kicker` = a small line above it.
+  //   slot:  the screen stays as it is (white): a shots panel covers it (a screen recording or a ui-demo card on
+  //          rect { x: 165, y: 207, w: 750, h: 396, r: 18 }, listed AFTER this card in shots.json).
+  // These are the gift-box reference's own times: retime every one to the project's transcript.json.
+  const SCREENS = [
+    { at: 0, kind: "image", src: "assets/media/hook.jpg",
+      labels: [{ text: "MAKE IT", at: 0.15, x: 0.08, y: 0.22, rot: -3 }, { text: "PERSONAL", at: 0.62, x: 0.33, y: 0.48, rot: -2 }] },
+    { at: 1.75, kind: "title", text: "GIFT BOX" },
+    { at: 9.04, kind: "slot" },
+  ];
+  // ── the screen ──
+  const q = (s) => CARD + " " + s;
+  const scr = document.querySelector(q("#lp-screen")), flash = document.querySelector(q("#lp-flash"));
+  const SW = 750, SHh = 396;
+  const mine = SCREENS.map((it, i) => ({ ...it, end: SCREENS[i + 1]?.at ?? Infinity })).filter((it) => it.at >= S - 0.01 && it.at < E);
+  const mk = (tag, cls, css = {}, parent = scr) => { const d = document.createElement(tag); if (cls) d.className = cls; Object.assign(d.style, css); if (parent === scr) scr.insertBefore(d, flash); else parent.appendChild(d); return d; };
+  const star = (sz) => `<svg width="${sz}" height="${sz}" viewBox="0 0 40 40"><path d="M20 0 C21 13 27 19 40 20 C27 21 21 27 20 40 C19 27 13 21 0 20 C13 19 19 13 20 0Z" fill="#141414"/></svg>`;
+  // a tween on the card's very first frame never renders (seen at 0.9.4): tweens start just inside
+  const T = (t) => Math.max(S + 0.04, t);
+  mine.forEach((it, i) => {
+    const el = mk("div", "lp-item" + (it.kind === "title" ? " lp-title" : ""));
+    const end = Math.min(it.end, E);
+    if (it.kind === "image") {
+      el.innerHTML = `<img src="${it.src}" alt="" style="object-position:${it.focus || "50% 50%"}">`;
+      tl.set(el, { opacity: 1 }, it.at);
+      (it.labels || []).forEach((l) => {
+        const lb = mk("div", "lp-lbl", { left: l.x * SW + "px", top: l.y * SHh + "px", transform: `rotate(${l.rot ?? -2}deg)` }, el);
+        lb.textContent = l.text;
+        tl.fromTo(lb, { opacity: 1, scale: 1.18 }, { scale: 1, duration: 0.12, ease: "power2.out", immediateRender: false }, T(l.at));
+        if (l.until) tl.set(lb, { opacity: 0 }, l.until);
+      });
+    } else if (it.kind === "title") {
+      const n = [...it.text].length, size = Math.round(Math.min(150, 640 / Math.max(1, n * 0.6)));
+      const top = (SHh - size) / 2 - (it.kicker ? 6 : 14);
+      el.innerHTML = `<div class="dots"></div>` + (it.kicker ? `<div class="kick" style="top:${top - 44}px">${it.kicker}</div>` : "") +
+        `<div class="echo" style="top:${top + size * 0.42}px;font-size:${size}px">${it.text}</div><div class="ttx" style="top:${top}px;font-size:${size}px">${it.text}</div>` +
+        [[0.12, 0.2, 34], [0.08, 0.78, 26], [0.83, 0.72, 46], [0.8, 0.5, 22]].map(([x, y, s]) => `<span class="sp" style="position:absolute;left:${x * SW}px;top:${y * SHh}px">${star(s)}</span>`).join("");
+      el.querySelectorAll(".sp").forEach((sp) => (sp.firstChild.style.opacity = 1));
+      tl.fromTo(flash, { opacity: 1 }, { opacity: 0, duration: 0.02, immediateRender: false }, T(it.at));
+      tl.set(flash, { opacity: 1 }, Math.max(S, it.at - 0.1));
+      tl.fromTo(el, { opacity: 1, clipPath: "inset(0 0 0 100%)" }, { clipPath: "inset(0 0 0 0%)", duration: 0.16, ease: "power2.out", immediateRender: false }, T(it.at));
+      tl.fromTo(el.querySelectorAll(".ttx, .echo, .kick"), { x: 420, filter: "blur(10px)", opacity: 0 }, { x: 0, filter: "blur(0px)", opacity: 1, duration: 0.24, ease: "expo.out", immediateRender: false }, it.at + 0.12);
+      el.querySelectorAll(".sp").forEach((sp, k) => tl.fromTo(sp, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "back.out(2.5)", immediateRender: false }, it.at + 0.5 + 0.12 * k));
+    } else {
+      tl.set(el, { opacity: 1 }, it.at);
+    }
+    if (end < E) tl.set(el, { opacity: 0 }, end);
+  });
+</script>

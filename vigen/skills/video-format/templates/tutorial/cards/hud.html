@@ -1,0 +1,43 @@
+<!-- Game-HUD tags over the result clip: a dark chip centred near the bottom ("SKY / SUN / STARS", a level
+     name, "COMPLETE") and a plain word or score in the bottom-right corner ("SUN", "+100", "x3"). They
+     name the tutorial's steps over its result, so the hook already says what the video will teach. Each tag
+     replaces the last in its slot on a hard cut, on the result's own cuts. BOX is the result square on screen:
+     the hook's bottom half (0, 840, 1080) or the outro's square (50, 470, 980). Change TAGS (video seconds,
+     text ≤ 24 characters, slot "chip" or "corner"; text "" clears the slot). Place it full frame with the
+     shots layout "over", over the result panels. -->
+<style>
+  @font-face { font-family: "Russo One"; src: url("assets/fonts/RussoOne-Regular.ttf"); }
+  .hd { position: absolute; }
+  .hd-tag { position: absolute; opacity: 0; font-family: "Russo One"; color: #ececf0; white-space: nowrap; letter-spacing: 0.04em;
+    text-transform: uppercase; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55), 0 0 10px rgba(0, 0, 0, 0.45); }
+  .hd-tag.chip { left: 50%; bottom: 7%; transform: translateX(-50%); padding: 0.12em 0.42em 0.16em; border-radius: 0.2em;
+    background: rgba(28, 28, 34, 0.74); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.16); }
+  .hd-tag.corner { right: 6%; bottom: 6%; }
+</style>
+<div class="hd" id="hd"></div>
+<script>
+  const q = (s) => CARD + " " + s;
+  // ── retime ──
+  const BOX = { x: 0, y: 840, s: 1080 };   // the result square: hook (0, 840, 1080) | outro (50, 470, 980)
+  const TAGS = [
+    { t: S + 0.0, slot: "chip", text: "Sky" },
+    { t: S + 1.6, slot: "chip", text: "" },
+    { t: S + 1.6, slot: "corner", text: "Sun" },
+    { t: S + 3.2, slot: "corner", text: "Stars" },
+    { t: S + 4.8, slot: "corner", text: "" },
+    { t: S + 4.8, slot: "chip", text: "Sky / Sun / Stars" },
+  ];
+
+  const root = document.querySelector(q("#hd"));
+  Object.assign(root.style, { left: BOX.x + "px", top: BOX.y + "px", width: BOX.s + "px", height: BOX.s + "px", fontSize: Math.round(BOX.s * 0.052) + "px" });
+  const shown = {};
+  TAGS.forEach((g, i) => {
+    if (shown[g.slot] != null) tl.set(q(`#hd-${shown[g.slot]}`), { opacity: 0 }, g.t);
+    if (!g.text) return (shown[g.slot] = null);
+    const el = document.createElement("div");
+    el.id = `hd-${i}`; el.className = `hd-tag ${g.slot}`; el.textContent = g.text;
+    root.appendChild(el);
+    tl.set(q(`#hd-${i}`), { opacity: 1 }, g.t);
+    shown[g.slot] = i;
+  });
+</script>

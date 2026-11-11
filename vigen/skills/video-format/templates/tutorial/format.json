@@ -1,0 +1,155 @@
+{
+  "name": "tutorial",
+  "guide": "FORMAT.md",
+  "refs": [
+    {
+      "file": "ref-1",
+      "duration": 36.9,
+      "size": "600×1066 (upscaled source)",
+      "cuts": 14,
+      "medianShot": 0.23,
+      "maxShot": 22.0,
+      "wordsPerMin": 119,
+      "flashes": 0,
+      "hook": 7.57,
+      "outro": 3.44,
+      "bedBelowVoice": 5,
+      "note": "the outro's music comes up to the voice's level (-13.4 LUFS); bed figure is an upper bound (no gaps in the speech)"
+    },
+    {
+      "file": "ref-2",
+      "duration": 37.0,
+      "size": "1080×1920 @ 24",
+      "cuts": 18,
+      "medianShot": 0.5,
+      "maxShot": 8.17,
+      "wordsPerMin": 150,
+      "flashes": 0,
+      "hook": 7.71,
+      "outro": 3.0,
+      "bedBelowVoice": 12
+    }
+  ],
+  "targets": {
+    "cutsPerMin": [
+      15,
+      35
+    ],
+    "medianShot": [
+      0.2,
+      2.5
+    ],
+    "maxShot": 25,
+    "flashesPerMin": [
+      0,
+      0
+    ],
+    "presenterShare": [
+      0,
+      0.05
+    ],
+    "subtitleCoverage": 0.9,
+    "bedBelowVoice": [
+      9,
+      15
+    ]
+  },
+  "layouts": {
+    "split": 0.21,
+    "window": 0.7,
+    "full": 0.09
+  },
+  "acts": {
+    "hook": [
+      6.5,
+      8
+    ],
+    "outro": [
+      2.5,
+      3.5
+    ]
+  },
+  "brand": {
+    "font": "Be Vietnam Pro",
+    "accent": "#F0141E",
+    "bg": "#0400F1",
+    "hudFont": "Russo One"
+  },
+  "shots": {
+    "split": {
+      "h": 0.5625,
+      "media": "bottom",
+      "faceAt": 0.45
+    },
+    "window": {
+      "x": 95,
+      "y": 104,
+      "w": 890,
+      "h": 503,
+      "r": 0,
+      "faceAt": 0.5,
+      "zoom": 1,
+      "bg": "#0400F1",
+      "panel": {
+        "y": 620,
+        "h": 980,
+        "r": 0
+      }
+    },
+    "frames": {
+      "wide": 1,
+      "punch": 1.2,
+      "tight": 1.4
+    },
+    "in": "cut",
+    "out": "cut"
+  },
+  "captions": {
+    "style": {
+      "entrance": "cut",
+      "exit": "cut",
+      "accent": "#F0141E",
+      "maxWidth": 860,
+      "w": {
+        "size": 58,
+        "weight": 800,
+        "upper": true,
+        "tracking": -0.05
+      },
+      "fonts": [
+        {
+          "family": "Russo One",
+          "file": "formats/tutorial/fonts/RussoOne-Regular.ttf"
+        }
+      ]
+    },
+    "chunk": {
+      "maxWords": 3,
+      "maxChars": 20,
+      "minDur": 0.35
+    },
+    "top": {
+      "presenter": 0.33,
+      "split": 0.33,
+      "window": 0.25,
+      "full": 0.33
+    },
+    "titlesEvery": 0
+  },
+  "sound": {
+    "bgm": {
+      "below": 12
+    },
+    "cues": "auto",
+    "captionSfx": [],
+    "uiClicks": true
+  },
+  "cards": {
+    "size": {
+      "w": 1080,
+      "h": 1920,
+      "safe": 1920
+    }
+  },
+  "cover": false
+}

@@ -1,0 +1,49 @@
+<!-- The promise line ("Here's WHAT NOBODY TELLS YOU…", "HERE ARE THREE THINGS I LEARNED THE HARD WAY"): huge
+     cream capitals on deep maroon, one line per spoken word (two short words may share a line), each dropping
+     in from above on its word while the stack re-centres; it ends in a bright bloom (blur + glow) that the cut
+     into the b-roll montage lands on. Measured at 1080×1920: Inter Black ≈ 185 px, line height 0.92, cream
+     #F2E8DF on #370004; a line drops ≈ 60 px in 0.12 s; the bloom is the last ≈ 0.18 s.
+
+     Copy into the project's cards/, edit LINES (the text of each line and when its word is said), retimed to
+     transcript.json. The type shrinks to fit when there are many lines. Place it with the shots layout "full",
+     "subs": false, from the first word to the cut into the montage. -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 100 900; src: url("assets/fonts/Inter.ttf"); }
+  .tt-root { position: absolute; inset: 0; background: #370004; }
+  .tt-stack { position: absolute; left: 0; width: 1080px; }
+  .tt-line { position: absolute; left: 0; width: 1080px; text-align: center; font-family: "Inter"; font-weight: 900;
+    text-transform: uppercase; letter-spacing: -0.03em; color: #F2E8DF; white-space: nowrap; opacity: 0; line-height: 1; }
+  .tt-bloom { position: absolute; inset: 0; opacity: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255, 236, 240, 0.95), rgba(214, 150, 160, 0.85) 60%, rgba(190, 120, 130, 0.8)); }
+</style>
+<div class="tt-root" id="tt-root"><div class="tt-bloom" id="tt-bloom"></div><div class="tt-stack" id="tt-stack"></div></div>
+<script>
+  // ── edit these (video seconds) ──
+  const LINES = [
+    { text: "WHAT", at: S + 0.0 },
+    { text: "NOBODY", at: S + 0.3 },
+    { text: "TELLS", at: S + 0.45 },
+    { text: "YOU", at: S + 0.7 },
+  ];
+  const BLOOM = E - 0.18;   // the glow-out into the next cut
+
+  const q = (s) => CARD + " " + s;
+  const stack = document.querySelector(q("#tt-stack"));
+  // size: the widest line fits 960 px (Inter Black capitals ≈ 0.74 em each), the stack fits 1300 px
+  const em = (t) => [...t].reduce((w, c) => w + (c === " " ? 0.28 : /[IJ1]/.test(c) ? 0.36 : /[MW]/.test(c) ? 0.98 : 0.74), 0);
+  // tight 0.92 lines suit plain capitals; marks above/below (Vietnamese Ô, Ề, Ạ…) collide at that pitch ("KHÔNG"
+  // under "BA" read as "BẠ"), so lines that carry them get room
+  const pitch = LINES.some((l) => /[^\u0000-\u024F]|[ÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ]/.test(l.text.toUpperCase())) ? 1.18 : 0.92;
+  const size = Math.floor(Math.min(185, ...LINES.map((l) => 960 / em(l.text.toUpperCase())), 1300 / (LINES.length * pitch)));
+  const lh = size * pitch;
+  stack.innerHTML = LINES.map((l, i) => `<div class="tt-line" id="tt-l${i}" style="top:${Math.round(i * lh)}px;font-size:${size}px">${l.text}</div>`).join("");
+  // the stack's top for k lines on screen: those k centred on the frame (cap height ≈ 0.73 em sits mid-line)
+  const topFor = (k) => Math.round(960 - (k * lh) / 2 - size * 0.06);
+  tl.set(q("#tt-stack"), { y: topFor(1) }, S);
+  LINES.forEach((l, i) => {
+    tl.fromTo(q(`#tt-l${i}`), { opacity: 1, y: -60 }, { y: 0, duration: 0.12, ease: "power3.out", immediateRender: false }, l.at);
+    if (i) tl.to(q("#tt-stack"), { y: topFor(i + 1), duration: 0.12, ease: "power3.out" }, l.at);
+  });
+  tl.fromTo(q("#tt-stack"), { filter: "blur(0px)" }, { filter: "blur(22px)", duration: E - BLOOM, ease: "power2.in", immediateRender: false }, BLOOM);
+  tl.fromTo(q("#tt-bloom"), { opacity: 0 }, { opacity: 1, duration: E - BLOOM, ease: "power2.in", immediateRender: false }, BLOOM);
+</script>

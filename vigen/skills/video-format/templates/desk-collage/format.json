@@ -1,0 +1,46 @@
+{
+  "name": "desk-collage",
+  "guide": "FORMAT.md",
+  "refs": [],
+  "targets": {
+    "cutsPerMin": [4, 14],
+    "maxShot": 17,
+    "flashesPerMin": [0, 0],
+    "bedBelowVoice": [9, 18]
+  },
+  "layouts": {
+    "desk": 0.12,
+    "poster": 0.27,
+    "close": 0.5,
+    "cta": 0.11
+  },
+  "brand": {
+    "font": "Archivo",
+    "accent": "#D4F842",
+    "bg": "#5E825A url(assets/desk/mat.jpg) center / cover no-repeat",
+    "card": { "x": 0, "y": 0, "w": 1080, "h": 1920, "r": 0 }
+  },
+  "shots": {
+    "in": "cut",
+    "out": "cut",
+    "hold": true,
+    "sticker": { "color": "#F5F2B4", "width": 14, "soft": 1.2, "boil": 3, "boilFps": 8 },
+    "presenter": "desk",
+    "presenters": {
+      "desk": { "top": 0.477, "height": 0.65, "x": 0.5, "sticker": true },
+      "close": { "top": 0.497, "height": 0.77, "x": 0.5, "sticker": true },
+      "poster": { "top": 0.52, "height": 0.344, "x": 0.505, "sticker": true },
+      "head": { "top": 0.138, "height": 1.255, "x": 0.5, "head": { "h": 0.26, "w": 0.125 } }
+    },
+    "screen": { "x": 165, "y": 207, "w": 750, "h": 396, "r": 18 }
+  },
+  "cards": {
+    "size": { "w": 1080, "h": 1920 }
+  },
+  "sound": {
+    "bgm": { "below": 15 },
+    "cues": "auto",
+    "captionSfx": []
+  },
+  "cover": false
+}

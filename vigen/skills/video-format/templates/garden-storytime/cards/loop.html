@@ -1,0 +1,47 @@
+<!-- The parts, explained on the wide seated look: each part's name appears circled where it is said, and one
+     continuous scribble line runs on from the last circle to the next, weaving around the presenter, until all
+     parts are linked. Kept to the card's end. Change the names and retime AT; positions sit around a centred
+     presenter (head ≈ 40 % down): move a label with its ellipse (same translate) if it lands on the face.
+     Place it with the shots layout "over". -->
+<style>
+  @font-face { font-family: "Patrick Hand"; src: url("assets/fonts/PatrickHand-Regular.ttf"); }
+  @font-face { font-family: "Playfair Display"; src: url("assets/fonts/PlayfairDisplay.ttf"); }
+  .lo-ink { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35)); }
+  .lo-ink path, .lo-ink circle, .lo-ink line { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .lp-lbl { position: absolute; width: 340px; height: 120px; display: flex; align-items: center; justify-content: center;
+    text-align: center; font-family: "Be Vietnam Pro"; font-weight: 800; font-size: 42px; line-height: 0.95; color: #fff;
+    letter-spacing: -0.01em; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.4); opacity: 0; }
+</style>
+<svg class="lo-ink" viewBox="0 0 1080 1920">
+  <path id="lp-e1" d="M245 259 C252 259 274 257 289 256 C303 256 318 256 333 257 C347 258 363 260 375 263 C388 266 400 271 408 276 C417 281 422 287 428 293 C434 298 437 303 443 309 C448 314 456 319 461 325 C466 331 472 338 472 345 C472 351 468 359 461 364 C454 370 440 375 429 379 C417 383 403 386 390 388 C377 391 365 394 351 396 C338 398 325 400 311 400 C297 401 283 400 269 399 C256 397 243 395 230 392 C217 390 204 388 191 384 C179 381 164 378 154 373 C144 368 134 362 130 355 C127 349 128 341 131 335 C134 329 143 323 148 317 C154 311 159 306 165 301 C170 296 173 290 180 284 C187 279 195 273 206 269 C217 265 231 262 245 259 C259 257 274 257 289 256 C303 256 325 257 333 257" pathLength="1" />
+  <path id="lp-e2" d="M737 431 C744 431 766 430 779 430 C793 430 807 431 820 432 C833 434 847 436 859 439 C871 443 881 448 891 454 C901 459 909 465 918 471 C927 477 937 483 944 490 C952 497 960 505 963 513 C965 522 964 531 959 539 C954 547 943 554 934 561 C924 567 912 571 901 576 C891 581 883 586 873 591 C863 596 853 602 841 606 C829 609 815 613 801 614 C787 615 772 614 758 613 C744 611 731 608 718 605 C705 601 691 597 680 592 C669 587 659 580 652 573 C646 566 643 557 641 549 C640 541 643 533 643 526 C644 518 645 511 645 504 C646 496 644 488 646 479 C649 471 652 462 660 455 C668 448 681 442 694 438 C707 434 723 433 737 431 C752 430 766 430 779 430 C793 430 813 432 820 432" pathLength="1" />
+  <path id="lp-e3" d="M185 759 C191 758 208 755 220 754 C233 753 246 751 259 752 C272 752 285 754 297 756 C309 758 320 762 330 766 C341 770 350 775 358 780 C367 785 375 790 379 796 C384 802 386 809 385 815 C383 821 377 828 371 833 C366 838 358 843 352 848 C346 853 342 858 336 863 C330 868 325 875 316 880 C307 884 295 889 282 891 C270 894 254 894 241 894 C227 893 213 891 201 889 C188 887 176 885 165 882 C154 879 142 876 133 872 C124 868 115 863 109 858 C103 853 100 847 96 841 C91 836 88 830 85 825 C82 819 78 812 77 806 C77 800 77 792 83 786 C88 780 99 775 110 771 C121 767 136 765 148 763 C161 761 173 760 185 759 C197 757 208 755 220 754 C233 753 252 752 259 752" pathLength="1" />
+  <path id="lp-e4" d="M776 1044 C783 1042 803 1033 818 1031 C833 1029 851 1028 866 1030 C882 1032 897 1037 910 1041 C923 1046 934 1052 945 1058 C956 1065 966 1071 974 1078 C982 1084 989 1092 993 1100 C997 1107 998 1116 997 1124 C997 1132 994 1139 991 1147 C989 1155 988 1163 984 1171 C980 1179 978 1189 970 1196 C962 1204 950 1212 937 1216 C923 1221 905 1223 889 1224 C873 1224 856 1222 841 1221 C826 1219 813 1218 799 1216 C784 1215 770 1214 756 1212 C742 1209 727 1206 715 1202 C703 1197 692 1190 683 1183 C675 1177 668 1169 662 1161 C656 1153 650 1145 648 1137 C646 1128 644 1119 648 1111 C652 1102 660 1094 670 1087 C680 1081 694 1076 706 1071 C718 1066 730 1063 742 1059 C753 1054 763 1048 776 1044 C788 1039 803 1033 818 1031 C833 1029 858 1030 866 1030" pathLength="1" />
+  <path id="lp-s1" d="M300 402 C300 470 420 470 470 430 C560 360 690 380 690 470 C690 540 760 600 820 590" pathLength="1" />
+  <path id="lp-s2" d="M720 600 C640 700 520 640 420 690 C330 735 240 700 230 750" pathLength="1" />
+  <path id="lp-s3" d="M300 860 C380 980 300 1080 420 1120 C540 1160 600 1060 700 1120 C740 1145 700 1160 680 1150" pathLength="1" />
+  <path id="lp-s4" d="M840 1225 C850 1330 700 1360 620 1420 C520 1500 640 1560 560 1640" pathLength="1" />
+</svg>
+<div class="lp-lbl" id="lp-t1" style="left:130px;top:270px">rest</div>
+<div class="lp-lbl" id="lp-t2" style="left:620px;top:460px">focus</div>
+<div class="lp-lbl" id="lp-t3" style="left:60px;top:760px">people</div>
+<div class="lp-lbl" id="lp-t4" style="left:660px;top:1070px">play</div>
+<script>
+  const q = (s) => CARD + " " + s;
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  // a stroke drawing itself, as by hand
+  const draw = (s, t, d = 0.4) => at(s, { strokeDashoffset: 1 }, { strokeDashoffset: 0 }, t, d, "power1.inOut");
+  const gone = (s, t, d = 0.25) => at(s, { opacity: 1 }, { opacity: 0 }, t, d, "power1.in");
+  // ── retime to the words (video seconds): each part's name ──
+  const AT = [S + 0.3, S + 2.0, S + 3.6, S + 5.2];
+
+  AT.forEach((t, i) => {
+    at(`#lp-t${i + 1}`, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1 }, t, 0.2, "back.out(2)");
+    draw(`#lp-e${i + 1}`, t + 0.05, 0.45);
+    // the line carries on to the next part as it is named (the last one trails off the bottom)
+    const next = AT[i + 1] ?? Math.min(E - 0.6, t + 1.6);
+    draw(`#lp-s${i + 1}`, t + 0.5, Math.max(0.4, next - t - 0.55));
+  });
+</script>

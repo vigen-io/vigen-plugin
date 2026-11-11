@@ -1,0 +1,136 @@
+<!-- The poster beats: the frame turns white and a magazine poster fills it: two colour blocks, a huge black two-line
+     headline over their top-left corner, a product photo (cut out) standing on the blocks, and the presenter sitting
+     small in front of it all. The poster is a stack of cut-out layers at different depths (blocks at the back, the
+     headline, kicker and tagline, the product in front; the presenter flat on top, from shots): it swings in from
+     ≈ 38° like a page turning, with a sideways motion blur, sways the whole time, and swings out the same way
+     before the next poster, the layers sliding past each other (parallax); a hand cursor clicks a part of it and that part
+     changes on the word (a new product, new words, new colours), so the poster gets "edited" while the viewer
+     watches. Measured on the references at 1080x1920: blocks 690x975 at (300, 385), the split at 65 %, the headline
+     at (185, 320), 118 px Archivo Black-like, line height 0.9; the presenter's head top at y 1000.
+
+     Copy into the project's cards/ and add one viz-cards html card per poster stretch ({ "id": "posters", "kind":
+     "html", "file": "cards/poster.html", "start": 3.04, "end": 9.04, "bg": "#ffffff" }); like laptop.html, a card
+     shows only the STEPS inside its own start–end. Place it with the shots layout "card", rect = the whole frame,
+     "presenter": "poster". Product photos: transparent PNGs (FORMAT.md § 3). -->
+<style>
+  @font-face { font-family: "Archivo"; src: url("assets/fonts/Archivo.ttf"); font-weight: 100 900; }
+  .ps-stage { position: absolute; inset: 0; perspective: 1400px; perspective-origin: 545px 900px; }
+  .ps { position: absolute; inset: 0; transform-origin: 545px 950px; transform-style: preserve-3d; }
+  .ps-layer { position: absolute; inset: 0; transform-style: preserve-3d; }
+  /* depth of each cut-out (px toward the camera): the parallax when the poster turns */
+  .ps-blk, .ps-mir { --z: 0px; } .ps-hd { --z: 70px; } .ps-kick { --z: 120px; } .ps-img { --z: 170px; } .ps-tag { --z: 260px; }
+  .ps-mir { position: absolute; left: 300px; top: 1015px; width: 690px; height: 345px; overflow: hidden; }
+  .ps-mir div { position: absolute; left: -115px; bottom: 45px; width: 860px; font-family: "Archivo"; font-weight: 900; font-stretch: 112%;
+    line-height: 0.9; letter-spacing: -0.035em; text-transform: uppercase; transform: scaleY(-1); }
+  .ps-blk { position: absolute; left: 300px; width: 690px; transform: translateZ(var(--z)); }
+  .ps-top { top: 385px; height: 630px; }
+  .ps-bot { top: 1015px; height: 345px; }
+  .ps-img { position: absolute; left: 240px; top: 440px; width: 640px; height: 640px; object-fit: contain; object-position: 50% 50%;
+    transform: translateZ(var(--z)); }
+  .ps-hd { position: absolute; left: 185px; top: 318px; width: 860px; font-family: "Archivo"; font-weight: 900; font-stretch: 112%;
+    font-size: 118px; line-height: 0.9; letter-spacing: -0.035em; color: #111; text-transform: uppercase; transform: translateZ(var(--z)); }
+  .ps-kick { position: absolute; left: 190px; top: 282px; font-family: "Archivo"; font-weight: 800; font-size: 26px; color: #111; transform: translateZ(var(--z)); }
+  .ps-tag { position: absolute; left: 140px; top: 1600px; font-family: "Archivo"; font-weight: 500; font-size: 26px; color: #111;
+    transform: translateZ(var(--z)) rotate(4deg); }
+  .ps-cur { position: absolute; left: 0; top: 0; width: 46px; height: 52px; opacity: 0; z-index: 5; }
+</style>
+<div class="ps-stage"><div class="ps" id="ps"></div></div>
+<svg width="0" height="0" style="position:absolute"><filter id="ps-mb" x="-20%" y="-5%" width="140%" height="110%"><feGaussianBlur id="ps-mb-b" stdDeviation="0 0"/></filter></svg>
+<svg class="ps-cur" id="ps-cur" viewBox="0 0 46 52"><path d="M14 4c0-2 3.5-2 3.5 0v16l2-.6V15c0-2 3.4-2 3.4 0v5l2-.3v-3c0-2 3.4-2 3.4 0v4l2 .2v-1.6c0-2 3.4-2 3.4 0V34c0 7-4.5 13-11.5 13h-3c-5 0-7.7-3-10.5-7.5L3 30c-1.3-2 1.2-4 3-2.5l8 7Z" fill="#fff" stroke="#111" stroke-width="2.4" stroke-linejoin="round"/></svg>
+<script>
+  // ── edit this ──
+  // One entry per change, in order, `at` on the video clock (transcript.json): the word the change lands on.
+  //   new: true      a new poster swings in (a cut to it; always the first of a card). Give it everything:
+  //                  headline, img, colors [top, bottom] (PALETTE below), optional kicker / tagline.
+  //   otherwise      the cursor clicks the part that changes 0.15 s before `at`: give only what changes
+  //                  (img = the product, headline = the words, colors = the blocks).
+  //   ink: the headline's colour (default black; "bottom" = the lower block's colour, as AIRY in ref-2);
+  //   mirror: true prints the headline again upside down in the lower block, in the upper block's colour (ref-2).
+  //   img: a transparent PNG, centred in a 640 px box over the blocks (its top half stays clear of the presenter's
+  //   head); `rot` (degrees) stands a wide product up (the references' products are all tall).
+  // These are the gift-box reference's own times: retime every one to the project's transcript.json.
+  const PALETTE = {
+    teal: ["#F1E4C4", "#1F5F5C"], coral: ["#CDD6B4", "#E35A3A"], dusk: ["#F1E3C5", "#89AAAF"],
+    pink: ["#FBF0C8", "#D8136B"], red: ["#FBF2E2", "#B5262B"], sky: ["#FCE9C9", "#86AFB4"],
+  };
+  const STEPS = [
+    { at: 3.04, new: true, headline: "A good<br>story", img: "assets/media/p-book.png", colors: PALETTE.teal },
+    { at: 5.25, new: true, headline: "A little<br>comfort", img: "assets/media/p-tin.png", colors: PALETTE.coral },
+    { at: 6.33, new: true, headline: "A personal<br>touch", img: "assets/media/p-bookmark.png", colors: PALETTE.dusk },
+    { at: 8.13, colors: PALETTE.pink },
+  ];
+  // ── the poster ──
+  const q = (s) => CARD + " " + s;
+  const root = document.querySelector(q("#ps")), cur = document.querySelector(q("#ps-cur"));
+  const mine = STEPS.filter((st) => st.at >= S - 0.01 && st.at < E);
+  // the headline keeps 118 px unless its longest line would pass x ≈ 965 (measured: ≈ 0.81 em a capital)
+  const fit = (el, h) => { const n = Math.max(...String(h).split(/<br\s*\/?>/i).map((l) => [...l].length)); el.style.fontSize = Math.round(Math.min(118, 780 / (n * 0.81))) + "px"; };
+  // the motion blur: one horizontal blur on every cut-out (filters on the parts, never on a 3D container: a filter
+  // flattens what is inside it), its strength tweened with the swings
+  const mbId = "ps-mb-" + Math.round(S * 1000), mb = document.querySelector(q("#ps-mb")), mbB = document.querySelector(q("#ps-mb-b"));
+  mb.id = mbId; mbB.id = mbId + "-b";
+  const blur = (from, to, dur, at, ease) => tl.fromTo(mbB, { attr: { stdDeviation: `${from} 0` } }, { attr: { stdDeviation: `${to} 0` }, duration: dur, ease, immediateRender: false }, at);
+  const SHADOW = "drop-shadow(0 18px 24px rgba(0, 0, 0, 0.18))";
+  const inkOf = (st, c) => (st.ink === "bottom" ? c[1] : st.ink || "#111");
+  // one layer per poster (a `new` step); in-place changes swap the parts of the current layer
+  let layer = null, parts = null, curPos = [880, 1250];
+  const news = mine.map((st, i) => [st, i]).filter(([st]) => st.new || st === mine[0]);
+  const SWING = 38, IN = 0.6, OUT = 0.32;
+  mine.forEach((st, i) => {
+    const at = Math.max(S, st.at);
+    if (st.new || !layer) {
+      const prev = layer, k = news.findIndex(([x]) => x === st), dir = k % 2 ? -1 : 1;
+      layer = document.createElement("div");
+      layer.className = "ps-layer"; layer.style.opacity = 0;
+      layer.innerHTML = `<div class="ps-blk ps-top"></div><div class="ps-blk ps-bot"></div><div class="ps-mir"><div></div></div><div class="ps-hd"></div>` +
+        `<div class="ps-kick"></div><img class="ps-img" alt=""><div class="ps-tag"></div>`;
+      root.appendChild(layer);
+      parts = { top: layer.querySelector(".ps-top"), bot: layer.querySelector(".ps-bot"), img: layer.querySelector(".ps-img"),
+        hd: layer.querySelector(".ps-hd"), kick: layer.querySelector(".ps-kick"), tag: layer.querySelector(".ps-tag"), mir: layer.querySelector(".ps-mir div") };
+      const c = st.colors || PALETTE.dusk;
+      parts.top.style.background = c[0]; parts.bot.style.background = c[1];
+      parts.img.src = st.img || ""; if (st.rot) parts.img.style.transform = `translateZ(var(--z)) rotate(${st.rot}deg)`; if (!st.img) parts.img.style.display = "none";
+      parts.hd.innerHTML = st.headline || ""; fit(parts.hd, st.headline || ""); parts.hd.style.color = inkOf(st, c);
+      if (st.mirror) { parts.mir.innerHTML = st.headline || ""; parts.mir.style.fontSize = parts.hd.style.fontSize; parts.mir.style.color = c[0]; }
+      parts.kick.textContent = st.kicker || ""; parts.tag.textContent = st.tagline || "";
+      for (const el of layer.children) el.style.filter = `url(#${mbId})` + (el === parts.img ? " " + SHADOW : "");
+      tl.set(layer, { opacity: 1 }, at);
+      if (prev) {
+        // the previous poster swings out the way the next one comes in, the cut lands mid-turn
+        tl.to(root, { rotationY: -SWING * dir, rotationZ: 3 * dir, scale: 0.94, duration: OUT, ease: "power2.in" }, at - OUT);
+        blur(0, 14, OUT, at - OUT, "power2.in");
+        tl.set(prev, { opacity: 0 }, at);
+      }
+      // the swing-in: turns in from the side and settles (a tween on the card's very first frame never renders)
+      const t0 = Math.max(S + 0.04, at);
+      tl.fromTo(root, { rotationY: SWING * dir, rotationX: -3, rotationZ: -3 * dir, scale: 0.94 }, { rotationY: 0, rotationX: 0, rotationZ: 0, scale: 1, duration: IN, ease: "back.out(1.15)", immediateRender: false }, t0);
+      blur(14, 0, IN * 0.6, t0, "power2.out");
+    } else {
+      // an in-place change: the cursor travels to the part and clicks it, the part changes on the word
+      const L = layer, P = parts;
+      const target = st.img ? [560, 760] : st.headline ? [520, 380] : [860, 1180];
+      tl.fromTo(cur, { x: curPos[0], y: curPos[1], opacity: 1 }, { x: target[0], y: target[1], duration: 0.4, ease: "power2.inOut", immediateRender: false }, at - 0.55);
+      tl.fromTo(cur, { scale: 1 }, { scale: 0.82, duration: 0.07, yoyo: true, repeat: 1, immediateRender: false }, at - 0.15);
+      curPos = target;
+      if (st.colors) { tl.set(P.top, { background: st.colors[0] }, at); tl.set(P.bot, { background: st.colors[1] }, at); }
+      if (st.headline) {
+        const h2 = P.hd.cloneNode(); h2.innerHTML = st.headline; h2.style.opacity = 0; fit(h2, st.headline); L.appendChild(h2);
+        tl.set(P.hd, { opacity: 0 }, at); tl.set(h2, { opacity: 1 }, at); P.hd = h2; }
+      if (st.img) { const i2 = P.img.cloneNode(); i2.src = st.img; i2.style.display = ""; i2.style.transform = st.rot ? `translateZ(var(--z)) rotate(${st.rot}deg)` : ""; i2.style.opacity = 0; L.insertBefore(i2, P.tag);
+        tl.set(P.img, { opacity: 0 }, at); tl.fromTo(i2, { opacity: 1, scale: 0.9 }, { scale: 1, duration: 0.2, ease: "back.out(2)", immediateRender: false }, at); P.img = i2; }
+    }
+    // the cursor wanders over the poster between clicks (as in the references), hidden for the swing-in
+    if (st.new) tl.set(cur, { opacity: 0 }, at);
+  });
+  // the sway between swings: the poster never sits still (≈ 1.2 s a move), from the end of each swing-in to the
+  // start of the next swing-out, so the two never fight over the same frames
+  const sway = [[7, -2, 0.6, 1.01], [-8, 2.5, -0.8, 1.0], [6, -1.5, 0.8, 1.02], [-6, 2, -0.5, 1.0]];
+  const swings = news.map(([st]) => Math.max(S, st.at));
+  for (let w = 0; w < swings.length; w++) {
+    const until = (swings[w + 1] ?? E) - (swings[w + 1] ? OUT : 0);
+    for (let t = swings[w] + IN, k = 0; t < until - 0.05; t += 1.2, k++) {
+      const [ry, rx, rz, s] = sway[(k + w) % sway.length];
+      tl.to(root, { rotationY: ry, rotationX: rx, rotationZ: rz, scale: s, duration: Math.min(1.2, until - t), ease: "sine.inOut" }, t);
+    }
+  }
+</script>

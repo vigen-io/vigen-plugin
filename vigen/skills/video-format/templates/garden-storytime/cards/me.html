@@ -1,0 +1,39 @@
+<!-- A stick figure labelled with an arrow ("ME"), drawn stroke by stroke beside the presenter on a wide look: the
+     line where the speaker turns to themselves or the product ("so I put all four on one page…"). Change the
+     label (one short word: ME, YOU, PERSON…), retime AT. It sits left of a centred presenter (x 130–330,
+     y 470–860): mirror it (style="transform: scaleX(-1)" on the svg, and move the label) for the right side.
+     Place it with the shots layout "over". -->
+<style>
+  @font-face { font-family: "Patrick Hand"; src: url("assets/fonts/PatrickHand-Regular.ttf"); }
+  @font-face { font-family: "Playfair Display"; src: url("assets/fonts/PlayfairDisplay.ttf"); }
+  .me-ink { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35)); }
+  .me-ink path, .me-ink circle, .me-ink line { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .me-lbl { position: absolute; left: 110px; top: 360px; font-family: "Patrick Hand"; font-size: 70px; color: #fff;
+    letter-spacing: 0.06em; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); opacity: 0; }
+</style>
+<svg class="me-ink" viewBox="0 0 1080 1920">
+  <circle id="me-head" cx="230" cy="560" r="38" pathLength="1" />
+  <path id="me-body" d="M230 600 L232 720" pathLength="1" />
+  <path id="me-arms" d="M168 640 C200 655 262 655 300 628" pathLength="1" />
+  <path id="me-legs" d="M180 840 L232 720 L286 838" pathLength="1" />
+  <path id="me-arrow" d="M190 440 C210 470 215 490 214 506 M196 488 L214 508 L232 488" pathLength="1" />
+</svg>
+<div class="me-lbl" id="me-lbl">ME</div>
+<script>
+  const q = (s) => CARD + " " + s;
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  // a stroke drawing itself, as by hand
+  const draw = (s, t, d = 0.4) => at(s, { strokeDashoffset: 1 }, { strokeDashoffset: 0 }, t, d, "power1.inOut");
+  const gone = (s, t, d = 0.25) => at(s, { opacity: 1 }, { opacity: 0 }, t, d, "power1.in");
+  // ── retime to the words (video seconds) ──
+  const AT = S + 0.2;   // the word the figure stands for
+
+  draw("#me-head", AT, 0.3);
+  draw("#me-body", AT + 0.25, 0.18);
+  draw("#me-arms", AT + 0.4, 0.2);
+  draw("#me-legs", AT + 0.55, 0.25);
+  at("#me-lbl", { opacity: 0, y: 8 }, { opacity: 1, y: 0 }, AT + 0.85, 0.25);
+  draw("#me-arrow", AT + 1.0, 0.3);
+</script>

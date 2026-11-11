@@ -1,0 +1,18 @@
+{
+  "about": "desk-collage films the koi in one setup: sitting cross-legged on the floor, a laptop on the lap, the whole figure in frame on a plain light backdrop (the backdrop is never seen: the presenter is cut out and placed on the cutting mat, the posters and the sign-off by the shots `presenters`). Made with the image-gen skill's formula (SKILL.md § 3): image 1 = a crop of the koi's head, image 2 = the look's `shot`, the prompt below with the look's `hair` line and `{{outfit}}` = the koi's own clothes from their photo, finished with plain trousers and shoes or socks (the look is full-length: legs and feet show on the posters). One standard 1K image; save it with `vigen.mjs koi add-look <koiDir> --template desk-collage --look desk --frame <file>` and lipsync every part with `--look desk-collage-desk`. The four placements (desk, close, poster, head) are moves of this one take in the edit, never separate looks. A photo of the koi that is not full-length does not work here (the poster shows the whole seated figure): the look is required.",
+  "image": {
+    "aspect": "9:16",
+    "size": "1K",
+    "model": "standard"
+  },
+  "prompt": "Recreate image 2 as a new photo, with the person from image 1 in it. Image 1 is only a reference for who the person is (a close-up of their head): ignore anything else in it. The result is image 2's scene, with its person replaced.\n\nCopy image 2 for everything about the shot: the camera angle and height, the distance and framing (the whole seated figure in frame, the head top about 28 % down and the feet about 92 % down, centred), the pose (sitting cross-legged on the floor, an open silver laptop on the lap with its lid facing the camera, the forearms resting loosely on the thighs and the hands lying relaxed on the knees, fingers loose), the plain light-grey seamless studio backdrop and floor, and the soft, even light.\n\nTake only the person's identity from image 1: their face, skin tone, build, and their hair's length, cut and colour. It must clearly be the person in image 1, not the person in image 2. The hair keeps its own length and cut, {{hair}}.\n\nOutfit: {{outfit}}. They wear this, not the clothes of the person in image 2, fitted naturally to image 2's pose.\n\nThe face is fully visible and sharp, lips gently closed with a calm, pleasant expression (no teeth showing), eyes looking into the lens. Both hands and both feet are fully visible and inside the frame. Nothing else in the scene: no furniture, no props besides the laptop, no shadows on the backdrop other than a soft one on the floor. Exactly one person. No text, no captions, no drawings, no logos (the laptop lid is plain), no watermark. Photorealistic, vertical 9:16.",
+  "looks": [
+    {
+      "name": "desk",
+      "shot": "shots/desk.jpg",
+      "hair": "{{length}}, neat and natural, falling as when sitting upright",
+      "use": "every part: one seated take, placed by the shots presenters (desk, close, poster, head)",
+      "share": 1.0
+    }
+  ]
+}

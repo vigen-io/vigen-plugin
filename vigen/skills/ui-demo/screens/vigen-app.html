@@ -1,0 +1,314 @@
+<!--
+  ui-demo screen: Vigen web app (vigen.io), the whole make-a-video flow (simplified recreation, light theme,
+  Vietnamese UI). Matched against the client's own pages (packages/client rendered locally with read-only
+  fixtures), 2026-11-10: avatar SSIM 0.94, voice 0.91, templates 0.88, result 0.78, create 0.75 (the lower two
+  differ in photo content, not layout). The app's fonts (TT Norms Pro, ABC Solar Display) are licensed: the
+  system stack stands in. Every page and the sidebar carry `zoom: 1.058` (measured off 0.945x screenshots).
+  States (page layers, one shown at a time): page-avatar (Tạo nhân vật mới) -> page-voice (Nhân bản giọng nói,
+  Ghi âm) -> page-create (Avatar của bạn sẽ nói gì?) -> page-result (Video Kết quả: processing -> done)
+  -> page-templates (Mẫu video).
+  Targets (data-ui):
+    nav-create-on  nav-templates-on  nav-video-on  nav-avatar-on (shown at start)
+    page-avatar  avatar-name  dropzone  avatar-photo  create-avatar-off  create-avatar
+    page-voice  voice-dropzone  tab-record  tab-record-on  rec-panel  rec-time
+    page-create  script-top  script-input  script-count  confirm  generate  portrait
+    page-result  status-proc  status-done  player  proc  proc-text  download
+    page-templates  tpl-start  tpl-row  tpl-1  tpl-2
+  Files: copy <skill>/screens/vigen-app/* (logo, the two template posters) into videos/<slug>/ui/, and make the
+  koi's own photos there from its look (or frame): ui/look.jpg (whole figure, ~600 px wide), ui/look-portrait.jpg
+  (head and shoulders, 4:5), ui/look-head.jpg (face, 5:6). Per video: the avatar's name ("Mai") in .portrait .nm
+  and the result title, and the pasted script (the video's own words).
+  Framing: on a 750x396 slot (desk-collage's laptop) frame each action: script-top at zoom 3 for a paste,
+  tpl-row for the template cards (labels fit under them), the player at 1.25, download at 1.9.
+  Used in: vigen-promo (desk-collage), 2026-11-10.
+-->
+<style>
+  .vg { width: 1280px; height: 800px; position: relative; background: #fff; color: #1a1a2e; font-size: 14px; overflow: hidden; }
+  svg { display: block; flex: none; }
+  img { display: block; }
+  .muted { color: #6b7280; }
+  .h { font-weight: 800; letter-spacing: -0.03em; }
+
+  /* sidebar */
+  .side { zoom: 1.058; position: absolute; left: 7px; top: 7px; width: 77px; height: 742px; border-radius: 22px; background: #fff;
+    box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 18px rgba(16,24,40,.06); border: 1px solid #f0f1f3; z-index: 20; }
+  .side .logo { position: absolute; left: 19px; top: 20px; width: 40px; height: 40px; border-radius: 12px; }
+  .nav { position: absolute; left: 7px; width: 62px; height: 56px; border-radius: 14px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px; color: #6b7280; font-size: 10px; }
+  .nav svg { width: 20px; height: 20px; }
+  .nav.on { background: rgba(0,196,255,.1); color: #00c4ff; }
+  .n1 { top: 84px; } .n2 { top: 142px; } .n3 { top: 200px; } .n4 { top: 258px; } .n5 { top: 320px; } .n6 { top: 382px; }
+
+  /* measured off screenshots shown at 0.945×: every page and the sidebar are scaled back up as a whole */
+  .page { position: absolute; left: 0; top: 0; width: 1210px; height: 756px; background: #fff; zoom: 1.058; }
+
+  /* avatar create */
+  .back { position: absolute; left: 393px; top: 27px; width: 30px; height: 30px; border-radius: 15px; border: 1px solid #e8eaed;
+    display: flex; align-items: center; justify-content: center; color: #6b7280; }
+  .av-title { position: absolute; left: 434px; top: 30px; font-size: 18px; }
+  .card { position: absolute; left: 393px; width: 516px; border: 1px solid #e8eaed; border-radius: 18px; background: #f8fafc; overflow: hidden; }
+  .card .hd { height: 45px; padding: 0 17px; display: flex; align-items: center; font-weight: 700; font-size: 12px; border-bottom: 1px solid #e8eaed; }
+  .card .bd { padding: 14px; }
+  .input { height: 40px; border: 1px solid #e8eaed; border-radius: 12px; background: #fff; padding: 0 15px; display: flex;
+    align-items: center; font-size: 12px; color: #1a1a2e; overflow: hidden; white-space: nowrap; }
+  .drop { position: relative; height: 197px; border: 2px solid #e8eaed; border-radius: 16px; background: #f8fafc; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: #6b7280; font-size: 9.5px; }
+  .drop b { color: #1a1a2e; font-size: 11.5px; font-weight: 600; }
+  .photo { position: absolute; left: 0; top: 0; width: 482px; height: 193px; border-radius: 14px; background: #f8fafc; display: flex;
+    align-items: center; justify-content: center; gap: 16px; }
+  .photo img { width: 120px; height: 144px; border-radius: 12px; object-fit: cover; }
+  .photo .ok { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: #6b7280; }
+  .photo .ok b { color: #1a1a2e; font-size: 13px; }
+  .btn-wide { position: absolute; left: 393px; top: 507px; width: 516px; height: 42px; border-radius: 14px; background: #7fe0ff; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; }
+  .btn-wide.go { background: #00c4ff; box-shadow: 0 6px 16px rgba(0,196,255,.3); }
+
+  /* voice clone */
+  .vc-title { position: absolute; left: 426px; top: 38px; font-size: 21px; }
+  .lab { position: absolute; left: 426px; font-family: ui-monospace, Menlo, monospace; font-size: 10px; color: #6b7280; display: flex; gap: 6px; align-items: center; }
+  .lab i { width: 9px; height: 9px; border-left: 1.5px solid #9ca3af; border-top: 1.5px solid #9ca3af; display: block; }
+  .lab em { color: #ef4444; font-style: normal; }
+  .vbox { position: absolute; left: 426px; top: 116px; width: 449px; height: 312px; border: 1px solid #e8eaed; border-radius: 18px; background: #fff;
+    box-shadow: 0 2px 8px rgba(16,24,40,.05); }
+  .tabs { position: absolute; left: 14px; top: 14px; width: 421px; height: 37px; border-radius: 12px; background: #f8fafc; border: 1px solid #eef0f2; }
+  .tab { position: absolute; top: 3px; width: 205px; height: 31px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    gap: 6px; font-size: 11px; color: #6b7280; }
+  .tab.t1 { left: 3px; } .tab.t2 { left: 211px; }
+  .tab.sel { background: #fff; color: #1a1a2e; box-shadow: 0 1px 3px rgba(16,24,40,.1); }
+  .tab .dot { width: 8px; height: 8px; border-radius: 4px; background: #6b7280; }
+  .tab .dot.red { background: #ef4444; }
+  .vdrop { position: absolute; left: 14px; top: 66px; width: 421px; height: 131px; border: 1.5px dashed #d8dce2; border-radius: 16px; display: flex;
+    flex-direction: column; align-items: center; justify-content: center; gap: 7px; font-size: 11px; }
+  .vdrop .link { color: #00c4ff; }
+  .tips { position: absolute; left: 14px; top: 208px; width: 421px; height: 90px; border: 1px solid #e8eaed; border-radius: 12px; padding: 12px 11px;
+    font-size: 9.5px; display: flex; flex-direction: column; gap: 8px; color: #1a1a2e; }
+  .tips div { display: flex; gap: 7px; align-items: center; }
+  .tips .ck { width: 11px; height: 11px; border-radius: 6px; background: #00c4ff; }
+  .rec { position: absolute; left: 14px; top: 66px; width: 421px; height: 131px; border: 1.5px solid #fecaca; border-radius: 16px; background: #fff;
+    display: flex; align-items: center; gap: 14px; padding: 0 18px; }
+  .rec .stop { width: 38px; height: 38px; border-radius: 19px; background: #ef4444; display: flex; align-items: center; justify-content: center; }
+  .rec .stop i { width: 12px; height: 12px; border-radius: 3px; background: #fff; display: block; }
+  .rec .wave { flex: 1; height: 60px; display: flex; align-items: center; gap: 3px; }
+  .rec .wave span { width: 3px; border-radius: 2px; background: #1a1a2e; display: block; }
+  .rec .time { font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; width: 44px; }
+  .vin { position: absolute; left: 426px; width: 449px; height: 32px; border: 1px solid #e8eaed; border-radius: 10px; padding: 0 15px;
+    display: flex; align-items: center; font-size: 11px; color: #9ca3af; }
+
+  /* create video */
+  .cr-h { position: absolute; left: 228px; width: 845px; top: 44px; text-align: center; font-size: 30px; }
+  .cr-h span { background: linear-gradient(90deg, #00c4ff, #7c83ff 55%, #c084fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .cr-sub { position: absolute; left: 440px; width: 420px; top: 88px; text-align: center; font-size: 10.5px; line-height: 1.55; color: #6b7280; }
+  .cr-card { position: absolute; left: 228px; top: 135px; width: 845px; height: 575px; border: 1px solid #e8eaed; border-radius: 24px; background: #fff;
+    box-shadow: 0 10px 30px rgba(16,24,40,.08); }
+  .audio { position: absolute; left: 10px; top: 10px; width: 417px; height: 496px; border: 1px solid #e8eaed; border-radius: 16px; }
+  .audio .t { position: absolute; left: 14px; top: 20px; font-weight: 700; font-size: 12px; }
+  .pill { position: absolute; height: 32px; border: 1px solid #e8eaed; border-radius: 16px; display: flex; align-items: center; gap: 6px; padding: 0 13px;
+    font-size: 12px; color: #1a1a2e; background: #fff; }
+  .pill svg { width: 13px; height: 13px; }
+  .script { position: absolute; left: 14px; top: 56px; width: 389px; height: 370px; font-size: 12.5px; line-height: 1.6; color: #1a1a2e; overflow: hidden; }
+  .audio .rule { position: absolute; left: 14px; right: 14px; top: 437px; border-top: 1px solid #e8eaed; }
+  .count { position: absolute; right: 108px; top: 460px; font-size: 9.5px; color: #9ca3af; }
+  .confirm { position: absolute; right: 14px; top: 449px; width: 88px; height: 32px; border-radius: 16px; background: #1a1a2e; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12px; }
+  .portrait { position: absolute; left: 438px; top: 10px; width: 397px; height: 496px; border-radius: 18px; overflow: hidden; background: #d9d9d6; }
+  .portrait > img { width: 397px; height: 496px; object-fit: cover; }
+  .portrait .nm { position: absolute; left: 0; right: 0; bottom: 58px; text-align: center; color: #fff; font-weight: 700; font-size: 17px;
+    text-shadow: 0 1px 6px rgba(0,0,0,.35); }
+  .portrait .sw { position: absolute; left: 155px; bottom: 14px; width: 86px; height: 40px; border-radius: 20px; background: #fff; display: flex;
+    align-items: center; justify-content: center; gap: 0; }
+  .portrait .sw img { width: 28px; height: 28px; border-radius: 14px; border: 2px solid #fff; object-fit: cover; margin-left: -6px; }
+  .portrait .sw img:first-child { margin-left: 0; }
+  .bar { position: absolute; left: 0; right: 0; top: 517px; border-top: 1px solid #e8eaed; }
+  .gen { position: absolute; right: 13px; top: 529px; width: 73px; height: 36px; border-radius: 18px; background: #00c4ff; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
+
+  /* result */
+  .rs-back { position: absolute; left: 307px; top: 28px; display: flex; gap: 8px; align-items: center; color: #6b7280; font-size: 13px; }
+  .badge { position: absolute; top: 65px; height: 17px; border-radius: 5px; padding: 0 7px; font-size: 10px; display: flex; align-items: center; }
+  .rs-title { position: absolute; left: 358px; top: 61px; font-size: 19px; }
+  .rs-date { position: absolute; left: 307px; top: 96px; font-size: 12px; color: #6b7280; }
+  .del { position: absolute; left: 932px; top: 63px; width: 62px; height: 42px; border: 1px solid #e8eaed; border-radius: 12px; color: #dc2626;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .rs-card { position: absolute; left: 307px; top: 136px; width: 687px; height: 473px; border: 1px solid #e8eaed; border-radius: 16px; background: #f8fafc; }
+  .rs-card .t { position: absolute; left: 20px; top: 22px; font-size: 14px; }
+  .player { position: absolute; left: 20px; top: 58px; width: 647px; height: 360px; border-radius: 10px; background: #0b0b0f; overflow: hidden; }
+  .player img { position: absolute; left: 193px; top: 0; width: 261px; height: 360px; object-fit: cover; }
+  .player .ctl { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: linear-gradient(transparent, rgba(0,0,0,.85)); }
+  .player .ctl .tm { position: absolute; left: 44px; bottom: 30px; color: #fff; font-size: 12px; }
+  .player .ctl .pl { position: absolute; left: 18px; bottom: 30px; width: 0; height: 0; border-left: 10px solid #fff; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+  .player .ctl .sk { position: absolute; left: 15px; right: 15px; bottom: 18px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); }
+  .player .ctl .sk i { display: block; width: 7%; height: 3px; border-radius: 2px; background: #fff; }
+  .proc { position: absolute; left: 0; top: 0; width: 647px; height: 360px; background: rgba(11,11,15,.72); display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px; color: #fff; font-size: 13px; }
+  .proc .pb { width: 240px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.2); }
+  .proc .pb i { display: block; width: 64%; height: 6px; border-radius: 3px; background: #00c4ff; }
+  .dl { position: absolute; left: 20px; top: 434px; display: flex; gap: 7px; align-items: center; color: #00c4ff; font-size: 13px; }
+
+  /* templates */
+  .tp-word { position: absolute; left: 228px; width: 845px; top: 38px; text-align: center; font-size: 74px; font-weight: 900; letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #a78bfa, #e9e3ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tp-sub1 { position: absolute; left: 228px; width: 845px; top: 112px; text-align: center; font-size: 10px; letter-spacing: .55em; color: #8b5cf6; font-weight: 700; }
+  .tp-sub2 { position: absolute; left: 228px; width: 845px; top: 145px; text-align: center; font-size: 12px; color: #6b7280; }
+  .tp-go { position: absolute; left: 520px; top: 185px; width: 116px; height: 43px; border-radius: 16px; background: #00c4ff; color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 12.5px; }
+  .tp-how { position: absolute; left: 650px; top: 196px; display: flex; gap: 7px; align-items: center; font-weight: 600; font-size: 12.5px; }
+  .tpl { position: absolute; top: 262px; width: 195px; height: 348px; border-radius: 16px; overflow: hidden; }
+  .tpl img.bg { width: 195px; height: 348px; object-fit: cover; }
+  .tpl .shade { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(transparent, rgba(0,0,0,.7)); }
+  .tpl .nm { position: absolute; left: 13px; bottom: 34px; width: 110px; color: #fff; font-weight: 600; font-size: 12.5px; line-height: 1.25; }
+  .tpl .mt { position: absolute; left: 13px; bottom: 14px; color: #fff; font-size: 10.5px; display: flex; gap: 12px; }
+  .tpl .pv { position: absolute; right: 12px; bottom: 12px; width: 45px; height: 60px; border-radius: 8px; border: 2px solid #fff; overflow: hidden; }
+  .tpl .pv img { width: 45px; height: 60px; object-fit: cover; }
+</style>
+<div class="vg">
+
+  <!-- ── page: Tạo nhân vật mới ─────────────────────────────────────────── -->
+  <div class="page" data-ui="page-avatar">
+    <div class="back"><svg viewBox="0 0 16 16" width="12" height="12"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="av-title h">Tạo nhân vật mới</div>
+    <div class="card" style="top: 83px; height: 112px;">
+      <div class="hd">Tên nhân vật</div>
+      <div class="bd"><div class="input" data-ui="avatar-name" data-placeholder="Ví dụ: Minh, Anna..."></div></div>
+    </div>
+    <div class="card" style="top: 216px; height: 270px;">
+      <div class="hd">Ảnh khuôn mặt</div>
+      <div class="bd">
+        <div class="drop" data-ui="dropzone">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M7 17a4 4 0 0 1-.6-8 6 6 0 0 1 11.4 1.5A3.5 3.5 0 0 1 17 17M12 12v8M9 15l3-3 3 3" fill="none" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <b>Kéo thả hoặc nhấn để tải ảnh</b>
+          <span>PNG, JPG, WebP · Một người, nhìn thẳng, thấy rõ miệng</span>
+          <div class="photo" data-ui="avatar-photo" data-off>
+            <img src="ui/look-head.jpg" width="120" height="144" alt="">
+            <div class="ok"><b>Ảnh đã sẵn sàng</b><span>Một người · nhìn thẳng · thấy rõ miệng</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-wide" data-ui="create-avatar-off">Tạo nhân vật</div>
+    <div class="btn-wide go" data-ui="create-avatar" data-off>Tạo nhân vật</div>
+  </div>
+
+  <!-- ── page: Nhân bản giọng nói ───────────────────────────────────────── -->
+  <div class="page" data-ui="page-voice" data-off>
+    <div class="vc-title h">Nhân bản giọng nói</div>
+    <div class="lab" style="top: 93px;"><i></i>đoạn âm thanh <em>*</em></div>
+    <div class="vbox">
+      <div class="tabs">
+        <div class="tab t1 sel"><svg viewBox="0 0 16 16" width="11" height="11"><path d="M10.5 4.5 5.6 9.4a1.5 1.5 0 0 0 2.1 2.1l5-5a3 3 0 0 0-4.2-4.2l-5 5a4.5 4.5 0 0 0 6.4 6.4l4-4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Tải lên</div>
+        <div class="tab t2" data-ui="tab-record"><span class="dot"></span>Ghi âm</div>
+        <div class="tab t2 sel" data-ui="tab-record-on" data-off><span class="dot red"></span>Ghi âm</div>
+      </div>
+      <div class="vdrop" data-ui="voice-dropzone">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 15V4M8 8l4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" fill="none" stroke="#6b7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div><span class="link">Tải lên file</span> hoặc kéo thả vào đây</div>
+        <div class="muted" style="font-size: 9.5px;">MP3, WAV, M4A, MP4, MOV tối đa 10 phút</div>
+      </div>
+      <div class="rec" data-ui="rec-panel" data-off>
+        <div class="stop"><i></i></div>
+        <div class="wave">
+          <span style="height:14px"></span><span style="height:30px"></span><span style="height:22px"></span><span style="height:44px"></span><span style="height:28px"></span>
+          <span style="height:52px"></span><span style="height:36px"></span><span style="height:18px"></span><span style="height:40px"></span><span style="height:56px"></span>
+          <span style="height:30px"></span><span style="height:46px"></span><span style="height:24px"></span><span style="height:12px"></span><span style="height:34px"></span>
+          <span style="height:50px"></span><span style="height:38px"></span><span style="height:20px"></span><span style="height:42px"></span><span style="height:28px"></span>
+          <span style="height:16px"></span><span style="height:36px"></span><span style="height:48px"></span><span style="height:26px"></span><span style="height:14px"></span>
+          <span style="height:32px"></span><span style="height:44px"></span><span style="height:22px"></span><span style="height:10px"></span><span style="height:8px"></span>
+        </div>
+        <div class="time" data-ui="rec-time">0:02</div>
+      </div>
+      <div class="tips">
+        <b style="font-size: 10px;">Để có kết quả tốt nhất:</b>
+        <div><span class="ck"></span>Tránh các khoảng lặng và ngắt quãng dài</div>
+        <div><span class="ck"></span>Nói với tốc độ và âm lượng mà bạn muốn giọng nhân bản phản ánh</div>
+        <div><span class="ck"></span>Cắt bỏ phần im lặng, tiếng click và tiếng ồn trước khi gửi</div>
+      </div>
+    </div>
+    <div class="lab" style="top: 456px;"><i></i>tên giọng nói <em>*</em></div>
+    <div class="vin" style="top: 474px;">Ví dụ: Giọng của tôi</div>
+    <div class="lab" style="top: 522px;"><i></i>mô tả</div>
+    <div class="vin" style="top: 540px;">Mô tả ngắn về giọng nói (tuỳ chọn)</div>
+  </div>
+
+  <!-- ── page: Tạo video ───────────────────────────────────────────────── -->
+  <div class="page" data-ui="page-create" data-off>
+    <div class="cr-h h">Avatar của bạn <span>sẽ nói gì?</span></div>
+    <div class="cr-sub">Tạo nhân vật từ bất kỳ bức ảnh nào, rồi tạo ra vô số video nhép miệng chỉ với một đoạn âm thanh.</div>
+    <div class="cr-card">
+      <div class="audio">
+        <div class="t">Âm thanh</div>
+        <div class="pill" style="left: 205px; top: 13px;"><svg viewBox="0 0 16 16"><path d="M8 11V3M5 6l3-3 3 3M3 11v2h10v-2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Tải lên</div>
+        <div class="pill" style="left: 305px; top: 13px;"><svg viewBox="0 0 16 16"><path d="M8 2a2 2 0 0 1 2 2v4a2 2 0 0 1-4 0V4a2 2 0 0 1 2-2ZM4.5 8a3.5 3.5 0 0 0 7 0M8 11.5V14" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Ghi âm</div>
+        <div data-ui="script-top" style="position: absolute; left: 10px; top: 46px; width: 397px; height: 120px;"></div>
+        <div class="script" data-ui="script-input" data-placeholder="Nhập hoặc dán kịch bản tại đây..."></div>
+        <div class="rule"></div>
+        <div class="pill" style="left: 14px; top: 449px;"><svg viewBox="0 0 16 16"><path d="M3 6v4M6 4v8M9 5v6M12 7v2" fill="none" stroke="#9ca3af" stroke-width="1.3" stroke-linecap="round"/></svg>Giọng của tôi</div>
+        <div class="count" data-ui="script-count">0/3000</div>
+        <div class="confirm" data-ui="confirm">Xác nhận</div>
+      </div>
+      <div class="portrait" data-ui="portrait">
+        <img src="ui/look-portrait.jpg" width="397" height="548" alt="">
+        <div class="nm">Mai</div>
+        <div class="sw"><img src="ui/look-head.jpg" width="28" height="28" alt=""><img src="ui/look.jpg" width="28" height="28" alt=""></div>
+      </div>
+      <div class="bar"></div>
+      <div class="gen" data-ui="generate">Tạo</div>
+    </div>
+  </div>
+
+  <!-- ── page: Video Kết quả ───────────────────────────────────────────── -->
+  <div class="page" data-ui="page-result" data-off>
+    <div class="rs-back"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M13 8H3M7 4 3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Quay lại Danh sách</div>
+    <div class="badge" style="left: 307px; background: #dbeafe; color: #1d4ed8;">Video</div>
+    <div class="rs-title h">Video của Mai</div>
+    <div class="badge" style="left: 486px; background: #fef3c7; color: #b45309;" data-ui="status-proc">Đang xử lý</div>
+    <div class="badge" style="left: 486px; background: #dcfce7; color: #15803d;" data-ui="status-done" data-off>Hoàn thành</div>
+    <div class="rs-date">Tạo lúc 15:20 10 thg 11, 2026</div>
+    <div class="del">Xóa</div>
+    <div class="rs-card">
+      <div class="t h">Video Kết quả</div>
+      <div class="player" data-ui="player">
+        <img src="ui/look.jpg" width="261" height="360" alt="">
+        <div class="ctl"><span class="pl"></span><span class="tm">0:00 / 0:23</span><div class="sk"><i></i></div></div>
+        <div class="proc" data-ui="proc">
+          <div data-ui="proc-text">Đang xử lý... 18%</div>
+          <div class="pb"><i></i></div>
+        </div>
+      </div>
+      <div class="dl" data-ui="download"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2v8M5 7l3 3 3-3M3 12v1.5h10V12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Tải xuống</div>
+    </div>
+  </div>
+
+  <!-- ── page: Mẫu video ───────────────────────────────────────────────── -->
+  <div class="page" data-ui="page-templates" data-off>
+    <div class="tp-word">VIGEN</div>
+    <div class="tp-sub1">MẪU VIDEO</div>
+    <div class="tp-sub2">Tạo video với nhân vật, giọng nói và phong cách của bạn.</div>
+    <div class="tp-go" data-ui="tpl-start">Bắt đầu tạo</div>
+    <div class="tp-how"><svg viewBox="0 0 16 16" width="15" height="15"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M6.3 6.3a1.8 1.8 0 1 1 2.4 1.7c-.5.2-.7.6-.7 1V9.6M8 11.4v.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Cách hoạt động?</div>
+    <div data-ui="tpl-row" style="position: absolute; left: 110px; top: 250px; width: 435px; height: 440px;"></div>
+    <div class="tpl" style="left: 120px;" data-ui="tpl-1">
+      <img class="bg" src="ui/tpl-quick.jpg" width="195" height="348" alt="">
+      <div class="shade"></div><div class="nm">Giải thích siêu tốc</div><div class="mt"><span>1:04</span><span>VI</span></div>
+      <div class="pv"><img src="ui/look-head.jpg" width="45" height="60" alt=""></div>
+    </div>
+    <div class="tpl" style="left: 337px;" data-ui="tpl-2">
+      <img class="bg" src="ui/tpl-garden.jpg" width="195" height="348" alt="">
+      <div class="shade"></div><div class="nm">Chuyện trong vườn</div><div class="mt"><span>0:36</span><span>VI</span></div>
+      <div class="pv"><img src="ui/look-head.jpg" width="45" height="60" alt=""></div>
+    </div>
+  </div>
+
+  <!-- ── sidebar (on top of every page) ────────────────────────────────── -->
+  <div class="side">
+    <img class="logo" src="ui/vigen-logo.png" width="40" height="40" alt="">
+    <div class="nav n1"><svg viewBox="0 0 24 24"><path d="M4 11h16v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8ZM4 11l-.6-3 15-3.4.7 3M8.5 6.9l2 3M13 5.9l2 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Tạo video</div>
+    <div class="nav n2"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="13" width="6" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Mẫu video</div>
+    <div class="nav n3"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 4v16M16 4v16M4 9h4M4 15h4M16 9h4M16 15h4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Video</div>
+    <div class="nav n4"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 18a6.5 6.5 0 0 1 11 0" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Avatar</div>
+    <div class="nav n5"><svg viewBox="0 0 24 24"><path d="M12 3 5 10l7 11 7-11-7-7Z" fill="#8a94a6"/></svg>Gói</div>
+    <div class="nav n6"><svg viewBox="0 0 24 24"><circle cx="15" cy="9" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11.8 12.2 4 20M7 17l2 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>API</div>
+    <div class="nav n1 on" data-ui="nav-create-on" data-off><svg viewBox="0 0 24 24"><path d="M4 11h16v8a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-8ZM4 11l-.6-3 15-3.4.7 3M8.5 6.9l2 3M13 5.9l2 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Tạo video</div>
+    <div class="nav n2 on" data-ui="nav-templates-on" data-off><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="14" y="13" width="6" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Mẫu video</div>
+    <div class="nav n3 on" data-ui="nav-video-on" data-off><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 4v16M16 4v16M4 9h4M4 15h4M16 9h4M16 15h4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Video</div>
+    <div class="nav n4 on" data-ui="nav-avatar-on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M6.5 18a6.5 6.5 0 0 1 11 0" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Avatar</div>
+  </div>
+</div>

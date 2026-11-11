@@ -1,0 +1,212 @@
+<!doctype html>
+<!-- The voice review page served by `parts.mjs review`: every part's text, its take, a new-take button. -->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vigen voice review</title>
+<style>
+  :root {
+    --bg: #f6f6f8; --card: #fff; --line: #e3e3e8; --text: #1b1b1f; --muted: #6b6b76; --field: #f1f2f6;
+    --chip: #ececf0; --accent: #5b3df5; --accent-text: #fff; --new: #0f8a5f; --warn: #b45309; --err: #c62828;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141417; --card: #1d1d22; --line: #2e2e36; --text: #ececf1; --muted: #9a9aa6; --field: #26262d;
+      --chip: #2c2c34; --accent: #7c66ff; --accent-text: #fff; --new: #3fbf8a; --warn: #f0a24a; --err: #ff6b6b;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 120px; }
+  h1 { font-size: 26px; font-weight: 600; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 20px; }
+  .bar { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+  .bar .total { color: var(--muted); font-size: 14px; margin-right: auto; }
+  .bar .note { flex-basis: 100%; margin-top: 0; }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 7px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; color: var(--text); background: transparent; }
+  button:disabled { opacity: .45; cursor: default; }
+  button svg { width: 18px; height: 18px; flex: none; }
+  .play { background: var(--chip); }
+  .redo.hot { background: var(--accent); color: var(--accent-text); }
+  .done { background: var(--accent); color: var(--accent-text); padding: 9px 22px; font-weight: 600; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 16px; margin-bottom: 14px; }
+  .card.busy { opacity: .7; }
+  .head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .head .name { color: var(--muted); margin-right: auto; }
+  .badge { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; }
+  .badge.new { color: var(--new); }
+  textarea { width: 100%; border: 1px solid transparent; border-radius: 10px; background: var(--field); color: var(--text); font: inherit; line-height: 1.7; padding: 10px 14px; resize: none; overflow: hidden; field-sizing: content; }
+  textarea:focus { outline: none; border-color: var(--accent); }
+  .note { font-size: 13px; margin-top: 6px; min-height: 0; }
+  .note.warn { color: var(--warn); }
+  .note.err { color: var(--err); }
+  .note.hint { color: var(--muted); }
+  .spin { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .closed { text-align: center; padding: 80px 16px; color: var(--muted); }
+  .closed b { display: block; color: var(--text); font-size: 20px; margin-bottom: 6px; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+const T = {
+  vi: {
+    title: "Nghe từng phần", lead: "Nghe, sửa chữ và tạo lại giọng cho từng phần. Xong thì bấm Xong để quay lại Claude.",
+    all: "Nghe tất cả", part: "Phần", play: "Nghe", stop: "Dừng", redo: "Tạo lại", busy: "Đang tạo…", done: "Xong",
+    fresh: "Bản mới", edited: "Đã sửa chữ: bấm Tạo lại để đọc lại.", interview: "Dòng bắt đầu bằng Q: là câu hỏi của người phỏng vấn.",
+    closedTitle: "Đã xong", closed: "Quay lại Claude để làm tiếp. Có thể đóng trang này.",
+    gone: "Trang này đã đóng. Quay lại Claude để làm tiếp.", sec: "giây",
+    blocked: "Trình duyệt chặn phát âm thanh. Bấm Nghe lần nữa.", noAudio: "Không phát được âm thanh",
+  },
+  en: {
+    title: "Listen part by part", lead: "Listen, edit the text and re-take the voice of any part. Click Done to go back to Claude.",
+    all: "Play all", part: "Part", play: "Play", stop: "Stop", redo: "Re-take", busy: "Generating…", done: "Done",
+    fresh: "New take", edited: "Text edited: click Re-take to voice it.", interview: "Lines starting with Q: are the interviewer's questions.",
+    closedTitle: "Done", closed: "Go back to Claude to continue. You can close this page.",
+    gone: "This review is closed. Go back to Claude to continue.", sec: "s",
+    blocked: "The browser blocked playback. Click Play again.", noAudio: "Couldn't play the audio",
+  },
+};
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></svg>',
+  stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg>',
+};
+const app = document.getElementById("app");
+const player = new Audio();
+let state = null, t = T.vi, playing = null, busy = null;
+const drafts = {}, errors = {}, fresh = new Set();
+
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const secs = (n) => `${n.toFixed(1).replace(".", t === T.vi ? "," : ".")} ${t.sec}`;
+const draft = (p) => drafts[p.index] ?? p.text;
+
+function playBtn(key) {
+  const on = playing === String(key); // `playing` holds the button's data-play value, a string
+  return `<button class="play" data-play="${key}">${on ? ICON.stop : ICON.play}${on ? t.stop : t.play}</button>`;
+}
+
+function render() {
+  if (!state) return;
+  app.innerHTML = `
+    <h1>${t.title}</h1>
+    <p class="lead">${t.lead}</p>
+    <div class="bar">
+      <button class="play" data-play="all">${playing === "all" ? ICON.stop + t.stop : ICON.play + t.all}</button>
+      <span class="total">${state.parts.length} ${t.part.toLowerCase()} · ${secs(state.seconds)}</span>
+      <button class="done" data-done ${busy != null ? "disabled" : ""}>${t.done}</button>
+      ${errors.all ? `<div class="note err">${esc(errors.all)}</div>` : ""}
+    </div>
+    ${state.parts.map((p) => {
+      const changed = draft(p).trim() !== p.text, mine = busy === p.index;
+      const note = errors[p.index] ? `<div class="note err">${esc(errors[p.index])}</div>`
+        : changed ? `<div class="note warn">${t.edited}</div>`
+        : p.interview ? `<div class="note hint">${t.interview}</div>` : "";
+      return `<section class="card${mine ? " busy" : ""}">
+        <div class="head">
+          <span class="name">${t.part} ${p.index} · ${secs(p.seconds)}</span>
+          ${fresh.has(p.index) ? `<span class="badge new">${t.fresh}${p.take > 1 ? " " + p.take : ""}</span>` : ""}
+          ${playBtn(p.index)}
+          <button class="redo${changed ? " hot" : ""}" data-redo="${p.index}" ${busy != null ? "disabled" : ""}>
+            ${mine ? '<span class="spin"></span>' + t.busy : ICON.redo + t.redo}</button>
+        </div>
+        <textarea data-text="${p.index}" rows="1" ${mine ? "disabled" : ""}>${esc(draft(p))}</textarea>
+        ${note}
+      </section>`;
+    }).join("")}`;
+  app.querySelectorAll("textarea").forEach(fit);
+}
+
+// field-sizing: content grows the field with its text; elsewhere it is sized by hand, and again when the width changes
+// (a preview pane can load the page while still narrow, which would leave every field far too tall)
+const autoSize = CSS.supports?.("field-sizing", "content");
+function fit(el) { if (autoSize) return; el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; }
+addEventListener("resize", () => app.querySelectorAll("textarea").forEach(fit));
+
+function stop() { player.pause(); playing = null; }
+
+function play(key) {
+  if (playing === key) { stop(); return render(); }
+  const p = key === "all" ? null : state.parts.find((x) => x.index === Number(key));
+  player.src = key === "all" ? `audio/all?v=${Date.now()}` : `audio/${key}?take=${p.take}`;
+  player.currentTime = 0;
+  playing = key;
+  delete errors[key];
+  // a failed play is shown on the page and reported to the terminal, so Claude can see why it stayed silent
+  player.play().catch((e) => {
+    if (playing !== key) return; // stopped or replaced by another play
+    playing = null;
+    errors[key] = e.name === "NotAllowedError" ? t.blocked : `${t.noAudio} (${e.name}: ${e.message})`;
+    fetch("log", { method: "POST", body: JSON.stringify({ message: `play ${key} failed: ${e.name}: ${e.message}` }) }).catch(() => {});
+    render();
+  });
+  render();
+}
+player.addEventListener("ended", () => { playing = null; render(); });
+
+async function redo(index) {
+  const p = state.parts.find((x) => x.index === index);
+  stop();
+  busy = index;
+  delete errors[index];
+  render();
+  try {
+    const r = await fetch(`redo/${index}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: draft(p) }) });
+    const body = await r.json();
+    if (body.error) throw new Error(body.error.message);
+    state = body;
+    delete drafts[index];
+    fresh.add(index);
+    busy = null;
+    play(String(index));
+  } catch (e) {
+    errors[index] = e.message;
+    busy = null;
+    render();
+  }
+}
+
+async function done() {
+  stop();
+  try { await fetch("done", { method: "POST" }); } catch {}
+  state = null;
+  app.innerHTML = `<div class="closed"><b>${t.closedTitle}</b>${t.closed}</div>`;
+}
+
+app.addEventListener("click", (e) => {
+  const el = e.target.closest("button");
+  if (!el || el.disabled) return;
+  if (el.dataset.play) play(el.dataset.play);
+  else if (el.dataset.redo) redo(Number(el.dataset.redo));
+  else if ("done" in el.dataset) done();
+});
+app.addEventListener("input", (e) => {
+  const el = e.target;
+  if (!el.dataset.text) return;
+  const index = Number(el.dataset.text);
+  drafts[index] = el.value;
+  fit(el);
+  // the warning and the button's emphasis follow the edit without re-rendering the field being typed in
+  const p = state.parts.find((x) => x.index === index), changed = el.value.trim() !== p.text;
+  const card = el.closest(".card");
+  card.querySelector(".redo").classList.toggle("hot", changed);
+  let note = card.querySelector(".note");
+  if (changed && !note) { note = document.createElement("div"); card.append(note); }
+  if (note && !errors[index]) {
+    note.className = changed ? "note warn" : p.interview ? "note hint" : "note";
+    note.textContent = changed ? t.edited : p.interview ? t.interview : "";
+  }
+});
+
+fetch("state").then((r) => r.json()).then((s) => {
+  state = s;
+  t = T[s.ui] || T.vi;
+  document.documentElement.lang = s.ui;
+  document.title = t.title;
+  render();
+}).catch(() => { app.innerHTML = `<div class="closed">${T.vi.gone}<br>${T.en.gone}</div>`; });
+</script>
+</body>
+</html>

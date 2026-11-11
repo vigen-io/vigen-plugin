@@ -1,0 +1,20 @@
+{
+  "about": "Optional: brand-building works with the koi's own photo as it is (a seated, chest-up take facing the lens). When the user wants the reference's set, the koi is reformed into the template's desk shot with the image-gen skill's formula (SKILL.md § 3): image 1 = a crop of the koi's head, image 2 = `shots/desk.jpg` (the template's own generated desk look: a generic presenter in the reference's set), the prompt below with the look's `hair` line and `{{outfit}}` = the koi's own clothes from their photo. One standard 1K image; save it with `vigen.mjs koi add-look <koiDir> --template brand-building --look desk --frame <file>` and lipsync every part with `--look brand-building-desk`. The wide / punch / tight framings are punch-ins on this one take. The reference presenter wears sunglasses: the look never copies them (the eyes stay visible for the lipsync) unless the koi wears glasses in their own photo.",
+  "optional": true,
+  "image": {
+    "aspect": "9:16",
+    "size": "1K",
+    "model": "standard"
+  },
+  "prompt": "Recreate image 2 as a new photo, with the person from image 1 in it. Image 1 is only a reference for who the person is (a close-up of their head): ignore anything else in it. The result is image 2's scene, with its person replaced.\n\nCopy image 2 for everything about the shot: the camera angle and height, the distance and framing (how big the person is in the frame and where they sit in it), the pose, the hand holding a small clip-on microphone just under the chin, the desk in front of them, the set and props, and the colour, light and film look: match image 2's colours, brightness and softness exactly.\n\nTake only the person's identity from image 1: their face, skin tone, build, and their hair's length, cut and colour. It must clearly be the person in image 1, not the person in image 2. The hair keeps its own length and cut, {{hair}}. No sunglasses: the eyes are clearly visible (keep glasses only if the person wears them in image 1, with clear lenses).\n\nOutfit: {{outfit}}. They wear this, not the clothes of the person in image 2, fitted naturally to image 2's pose.\n\nThe face is fully visible and sharp, lips gently closed with a calm, confident expression (no teeth showing), eyes looking into the lens. The microphone never covers the mouth. Exactly one person. No text, no captions, no drawings, no logos, no watermark. Photorealistic, vertical 9:16.",
+  "looks": [
+    {
+      "name": "desk",
+      "shot": "shots/desk.jpg",
+      "hair": "falling naturally as when sitting upright",
+      "use": "every part: one seated take at the desk, reframed wide / punch / tight between returns to the presenter",
+      "share": 1.0,
+      "subTop": 0.484
+    }
+  ]
+}

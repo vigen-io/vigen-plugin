@@ -1,0 +1,33 @@
+<!-- The name of the thing (the product, the method, the series): a big lowercase serif title with a full stop,
+     top left, and a small tagline typed in word by word as it is said. On a wide look, over the space above
+     the presenter, held to the card's end (5–8 s). Change the title (lowercase, one or two lines with <br>, a
+     full stop) and the tagline's words (one <span> per word, ids in order), then retime TITLE and WORDS: one
+     time per word, as spoken. Place it with the shots layout "over". -->
+<style>
+  @font-face { font-family: "Patrick Hand"; src: url("assets/fonts/PatrickHand-Regular.ttf"); }
+  @font-face { font-family: "Playfair Display"; src: url("assets/fonts/PlayfairDisplay.ttf"); }
+  .ti-ink { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: visible;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35)); }
+  .ti-ink path, .ti-ink circle, .ti-ink line { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .tt-title { position: absolute; left: 76px; top: 300px; width: 900px; font-family: "Playfair Display"; font-weight: 400;
+    font-size: 190px; line-height: 0.86; letter-spacing: -0.02em; color: #fff; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.3); opacity: 0; }
+  .tt-tag { position: absolute; left: 82px; top: 690px; width: 560px; font-family: "Be Vietnam Pro"; font-weight: 700;
+    font-size: 34px; line-height: 1.15; color: #fff; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.45); }
+  .tt-tag span { opacity: 0; }
+</style>
+<div class="tt-title" id="tt-title">quiet<br>habits.</div>
+<div class="tt-tag" id="tt-tag"><span id="tt-w1">one</span> <span id="tt-w2">page,</span> <span id="tt-w3">four</span> <span id="tt-w4">pillars,</span> <span id="tt-w5">no</span> <span id="tt-w6">course</span> <span id="tt-w7">required.</span></div>
+<script>
+  const q = (s) => CARD + " " + s;
+  const at = (s, from, to, t, d = 0.3, ease = "power2.out") => tl.fromTo(q(s), from, { ...to, duration: d, ease, immediateRender: false }, t);
+  // a stroke drawing itself, as by hand
+  const draw = (s, t, d = 0.4) => at(s, { strokeDashoffset: 1 }, { strokeDashoffset: 0 }, t, d, "power1.inOut");
+  const gone = (s, t, d = 0.25) => at(s, { opacity: 1 }, { opacity: 0 }, t, d, "power1.in");
+  // ── retime to the words (video seconds) ──
+  const TITLE = S + 0.2;   // the name, as it is said (or on the cut into the shot)
+  const WORDS = Array.from({ length: 7 }, (_, i) => S + 0.9 + 0.28 * i);   // each tagline word as spoken
+
+  at("#tt-title", { opacity: 0, y: 24 }, { opacity: 1, y: 0 }, TITLE, 0.5, "power3.out");
+  WORDS.forEach((t, i) => tl.set(q(`#tt-w${i + 1}`), { opacity: 1 }, t));
+</script>

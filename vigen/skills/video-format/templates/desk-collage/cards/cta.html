@@ -1,0 +1,66 @@
+<!-- The sign-off: back on the cutting mat, the laptop gone, only the presenter's head (cut off at the chin, no outline)
+     high in the frame, talking; under it the call to action is hand-written in white brush script, line by line on
+     its words, each line underlined in red with two quick strokes: "Comment" / the KEYWORD (big caps, set right) /
+     a short last line ("I'll send you the link.", "Who's yours for?"). Measured on the references at 1080x1920:
+     "Comment" 120 px at (180, 1060), the keyword 150 px caps ending near x 790 at y 1195, the last line 84 px at
+     (205, 1360); underlines #D60C28.
+
+     Copy into the project's cards/: { "id": "cta", "kind": "html", "file": "cards/cta.html", "start": <the CTA's
+     first word>, "end": <the end>, "bg": "transparent" }, placed with the shots layout "card", rect = the whole frame,
+     "presenter": "head" (the mat shows through from brand.bg). -->
+<style>
+  @font-face { font-family: "Caveat Brush"; src: url("assets/fonts/CaveatBrush-Regular.ttf"); }
+  @font-face { font-family: "Sriracha"; src: url("assets/fonts/Sriracha-Regular.ttf"); }
+  .ct-line { position: absolute; white-space: nowrap; color: #fff; line-height: 1; opacity: 0;
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.18); }
+  .ct-ul { position: absolute; overflow: visible; }
+  .ct-ul path { fill: none; stroke: #D60C28; stroke-linecap: round; }
+</style>
+<div id="ct"></div>
+<script>
+  // ── edit this ──
+  // `at` = the word the line is written on (video clock, transcript.json). kind: "script" (a hand-written line) or
+  // "key" (the keyword: big brush caps). x/y = the line's left/top in frame px; `right` instead of x sets its right edge.
+  // Vietnamese lines switch to Sriracha by themselves (Caveat Brush has no Vietnamese).
+  // These are the gift-box reference's own times: retime every one to the project's transcript.json.
+  const LINES = [
+    { text: "Comment", at: 20.7, kind: "script", x: 180, y: 1060 },
+    { text: "GIFT", at: 21.3, kind: "key", right: 790, y: 1195 },
+    { text: "Who's yours for?", at: 22.25, kind: "script", x: 205, y: 1360, size: 84 },
+  ];
+  // ── the lines ──
+  const q = (s) => CARD + " " + s;
+  const root = document.querySelector(q("#ct"));
+  const VI = /[ăâđêôơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i;
+  LINES.filter((l) => l.at >= S - 0.01 && l.at < E).forEach((l, i) => {
+    // a tween on the card's very first frame never renders (seen at 0.9.4): start it just inside
+    const at = Math.max(l.at, S + 0.04);
+    const key = l.kind === "key", size = l.size || (key ? 150 : 120);
+    const fam = VI.test(l.text) ? "Sriracha" : "Caveat Brush";
+    const el = document.createElement("div");
+    el.className = "ct-line";
+    el.textContent = l.text;
+    Object.assign(el.style, { fontFamily: `"${fam}"`, fontSize: size + "px", top: l.y + "px", letterSpacing: key ? "0.02em" : "0",
+      fontWeight: key ? 700 : 400, ...(l.right != null ? { right: 1080 - l.right + "px" } : { left: l.x + "px" }),
+      ...(key ? { WebkitTextStroke: "3px #fff" } : {}) });
+    root.appendChild(el);
+    // written on: a left-to-right reveal, as fast as a hand (≈ 0.07 s a letter, 0.25–0.6 s a line)
+    const dur = Math.min(0.6, Math.max(0.25, [...l.text].length * 0.06));
+    tl.fromTo(el, { opacity: 1, clipPath: "inset(-20% 100% -20% 0)" }, { clipPath: "inset(-20% 0% -20% 0)", duration: dur, ease: "none", immediateRender: false }, at);
+    // two red strokes under it, drawn right after (widths from the text's own length, measured once fonts load)
+    const est = [...l.text].length * size * (key ? 0.56 : 0.42);
+    const ul = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    ul.setAttribute("class", "ct-ul");
+    const x0 = l.right != null ? l.right - est - 30 : l.x - 28, y0 = l.y + size * 1.02;
+    Object.assign(ul.style, { left: x0 + "px", top: y0 + "px", width: est + 70 + "px", height: "40px" });
+    const w = est + 50;
+    ul.innerHTML = `<path d="M4 ${10 + (i % 2) * 2} C ${w * 0.3} 6, ${w * 0.7} 4, ${w} 10 L ${w + 8} 6" stroke-width="7"/>` +
+      `<path d="M${w * 0.14} 24 C ${w * 0.45} 21, ${w * 0.75} 22, ${w * 0.92} 19" stroke-width="6"/>`;
+    root.appendChild(ul);
+    ul.querySelectorAll("path").forEach((p, k) => {
+      const len = w * 1.1;
+      p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+      tl.fromTo(p, { strokeDashoffset: len }, { strokeDashoffset: 0, duration: 0.18, ease: "power1.in", immediateRender: false }, at + dur + 0.04 + k * 0.1);
+    });
+  });
+</script>

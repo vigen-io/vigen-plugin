@@ -1,0 +1,209 @@
+<!--
+  ui-demo screen: ChatGPT web, Projects flow (simplified recreation, light theme, English UI).
+  States: home -> "Create project" dialog -> project page -> ••• menu -> "Project settings" dialog;
+  project chat (request bubble, reply with a "Prompt" code block + Copy) -> home composer (paste + send).
+  Fidelity: UNVERIFIED — no screenshots (the user had none; chatgpt.com shows bots a loading screen).
+  Flow per help.openai.com "Projects in ChatGPT" (search summary, 2026-11): New project in the sidebar,
+  name + icon/colour; instructions via the project's ••• menu > Project settings. Kept simplified.
+
+  Targets (data-ui):
+    new-chat  new-project  sidebar-project  home  home-composer
+    overlay  new-project-modal  project-name  create-project
+    project-page  project-title  project-more  project-menu  project-settings  project-composer  project-input  project-send
+    chat-view  user-msg  reply-intro  codebox  c1…c7  copy-reply  copy-label
+    home-input  home-send
+    instructions-modal  instructions-title  instructions-field  save
+  Per-video text: the project name ("Dự án của tôi") in the sidebar item, the project title, the composer
+  placeholder ("New chat in …") and the Name field of Project settings; the recent chats in .chats.
+  Used in: master-prompt-cuong-v4 (koi), 2026-11-04.
+-->
+<style>
+  .gpt { width: 1280px; height: 800px; display: flex; background: #fff; color: #0d0d0d; font-size: 14px; }
+  svg { display: block; flex: none; }
+  .side { width: 260px; height: 100%; background: #f9f9f9; border-right: 1px solid #ececec; padding: 10px 8px; display: flex; flex-direction: column; }
+  .side-top { display: flex; justify-content: space-between; align-items: center; height: 44px; padding: 0 8px; }
+  .item { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 10px; border-radius: 10px; color: #0d0d0d; white-space: nowrap; overflow: hidden; }
+  .item.on { background: #ececec; }
+  .item .lab { overflow: hidden; text-overflow: ellipsis; }
+  .sec { margin: 18px 10px 6px; font-size: 13px; color: #8f8f8f; }
+  .chats .item { height: 34px; }
+  .me { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-top: 1px solid #ececec; }
+  .av { width: 32px; height: 32px; border-radius: 50%; background: #0E78D0; color: #fff; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .me b { display: block; font-weight: 600; }
+  .me small { display: block; color: #8f8f8f; font-size: 12px; }
+
+  .main { position: relative; flex: 1; height: 100%; }
+  .bar { height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .model { display: flex; align-items: center; gap: 6px; font-size: 18px; font-weight: 500; padding: 6px 10px; border-radius: 10px; }
+  .pill { display: flex; align-items: center; gap: 6px; padding: 7px 14px; border: 1px solid #e5e5e5; border-radius: 999px; font-weight: 500; }
+
+  .home, .proj { position: absolute; left: 0; right: 0; top: 56px; bottom: 0; background: #fff; }
+  .home { display: flex; flex-direction: column; align-items: center; padding-top: 210px; }
+  .home h1 { font-size: 28px; font-weight: 500; margin-bottom: 28px; letter-spacing: -0.01em; }
+  .composer { width: 720px; height: 58px; display: flex; align-items: center; gap: 12px; padding: 0 12px 0 16px; border: 1px solid #e3e3e3;
+    border-radius: 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); background: #fff; color: #8f8f8f; font-size: 16px; }
+  .composer .ph { flex: 1; }
+  .fld { flex: 1; height: 36px; overflow: hidden; color: #0d0d0d; font-size: 16px; line-height: 36px; }
+  .composer.tall { height: 122px; flex-direction: column; align-items: stretch; gap: 8px; padding: 14px 12px 10px 18px; border-radius: 28px; }
+  .composer.tall .fld { flex: none; height: 52px; line-height: 1.45; }
+  .tools { display: flex; align-items: center; gap: 12px; }
+  .tools .sp { flex: 1; }
+  .chat { position: absolute; left: 0; right: 0; top: 56px; bottom: 0; background: #fff; }
+  .msg-user { position: absolute; right: 150px; top: 36px; width: 360px; padding: 12px 18px; border-radius: 22px; background: #f2f2f2; color: #0d0d0d; }
+  .rep { position: absolute; left: 150px; top: 118px; width: 720px; color: #0d0d0d; }
+  .rep-intro { height: 22px; margin-bottom: 14px; }
+  .code { border-radius: 16px; background: #f7f7f8; border: 1px solid #ececec; overflow: hidden; }
+  .code-head { height: 40px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: #efeff1; font-size: 13px; color: #5d5d5d; }
+  .copy { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: 8px; font-size: 13px; color: #3d3d3d; }
+  .code-body { padding: 10px 18px 14px; color: #0d0d0d; }
+  .code-body .uid-sk { margin: 0.55em 0; }
+  .code-body > div { height: 1.7em; overflow: hidden; }
+  .chat .composer { position: absolute; left: 150px; bottom: 26px; width: 720px; }
+  .send { width: 36px; height: 36px; border-radius: 50%; background: #0d0d0d; display: flex; align-items: center; justify-content: center; }
+
+  .proj { padding: 70px 0 0 140px; }
+  .proj-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .proj-head h2 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  .more { width: 36px; height: 36px; margin-left: 4px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .menu { position: absolute; left: 390px; top: 114px; width: 220px; background: #fff; border: 1px solid #e5e5e5; border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.14); padding: 6px; }
+  .menu .item { height: 38px; }
+  .menu .item.danger { color: #e02e2a; }
+  .icons { display: flex; gap: 10px; margin: 16px 0 12px; }
+  .icons span { width: 34px; height: 34px; border-radius: 50%; }
+  .field-lab { font-size: 13px; font-weight: 600; color: #3d3d3d; margin: 14px 0 6px; }
+  .field.thin { height: 42px; border: 1px solid #d9d9d9; }
+  .proj .composer { width: 740px; }
+  .tiles { display: flex; gap: 14px; width: 740px; margin-top: 18px; }
+  .tile { flex: 1; display: flex; gap: 12px; align-items: flex-start; padding: 16px; border: 1px solid #e5e5e5; border-radius: 16px; background: #fff; }
+  .tile b { display: block; font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+  .tile small { display: block; color: #6b6b6b; font-size: 13px; line-height: 1.35; }
+  .ico-box { width: 36px; height: 36px; border-radius: 10px; background: #f3f3f3; display: flex; align-items: center; justify-content: center; }
+  .empty { width: 740px; margin-top: 36px; padding-top: 18px; border-top: 1px solid #ececec; color: #8f8f8f; }
+
+  .ov { position: absolute; inset: 0; background: rgba(0,0,0,0.32); }
+  .modal { position: absolute; left: 360px; top: 230px; width: 560px; background: #fff; border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.25); padding: 22px 24px 20px; }
+  .m-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .m-head h3 { font-size: 18px; font-weight: 600; }
+  .field { height: 48px; display: flex; align-items: center; padding: 0 14px; border: 2px solid #0d0d0d; border-radius: 12px; font-size: 16px; }
+  .chips { display: flex; gap: 8px; margin: 14px 0 12px; }
+  .chips span { padding: 6px 12px; border: 1px solid #e5e5e5; border-radius: 999px; font-size: 13px; color: #3d3d3d; }
+  .hint { color: #6b6b6b; font-size: 13px; line-height: 1.45; }
+  .m-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+  .btn { height: 40px; padding: 0 18px; border-radius: 999px; display: flex; align-items: center; font-weight: 600; }
+  .btn.dark { background: #0d0d0d; color: #fff; }
+  .btn.ghost { border: 1px solid #e5e5e5; }
+  .ins { width: 640px; left: 320px; top: 56px; }
+  .ins .sub { color: #6b6b6b; margin: -6px 0 12px; }
+  .area { height: 150px; padding: 12px 14px; border: 1px solid #d9d9d9; border-radius: 12px; font-size: 14px; line-height: 1.5; overflow: hidden; white-space: normal; }
+</style>
+<div class="gpt">
+  <aside class="side">
+    <div class="side-top">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5d5d5d" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+    </div>
+    <div class="item" data-ui="new-chat"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg><span class="lab">New chat</span></div>
+    <div class="item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="lab">Search chats</span></div>
+    <div class="item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg><span class="lab">Library</span></div>
+    <div class="sec">Projects</div>
+    <div class="item" data-ui="new-project"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M12 10.5v5M9.5 13h5"/></svg><span class="lab">New project</span></div>
+    <div class="item proj-new on" data-ui="sidebar-project" data-off data-grow><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0E78D0" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span class="lab">Dự án của tôi</span></div>
+    <div class="item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span class="lab">Ý tưởng video</span></div>
+    <div class="item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span class="lab">Học tiếng Anh</span></div>
+    <div class="sec">Chats</div>
+    <div class="chats">
+      <div class="item"><span class="lab">Lên kịch bản TikTok 60s</span></div>
+      <div class="item"><span class="lab">Ý tưởng thumbnail</span></div>
+      <div class="item"><span class="lab">Viết caption bán hàng</span></div>
+      <div class="item"><span class="lab">Tóm tắt sách Atomic Habits</span></div>
+      <div class="item"><span class="lab">Dịch email sang tiếng Anh</span></div>
+    </div>
+    <div class="me"><div class="av">A</div><div><b>Anh Em</b><small>Plus</small></div></div>
+  </aside>
+
+  <main class="main">
+    <header class="bar">
+      <div class="model">ChatGPT <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5d5d5d" stroke-width="2.2"><path d="m6 9 6 6 6-6"/></svg></div>
+      <div class="pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M12 3v12M7 8l5-5 5 5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>Share</div>
+    </header>
+
+    <section class="home" data-ui="home">
+      <h1>What's on your mind today?</h1>
+      <div class="composer tall" data-ui="home-composer">
+        <div class="fld" data-ui="home-input" data-placeholder="Ask anything"></div>
+        <div class="tools">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="sp"></span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5d5d5d" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          <div class="send" data-ui="home-send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="proj" data-ui="project-page" data-off>
+      <div class="proj-head">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#0E78D0" stroke-width="1.7"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>
+        <h2 data-ui="project-title">Dự án của tôi</h2>
+        <div class="more" data-ui="project-more"><svg width="20" height="20" viewBox="0 0 24 24" fill="#0d0d0d"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></div>
+      </div>
+      <div class="composer" data-ui="project-composer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+        <div class="fld" data-ui="project-input" data-placeholder="New chat in Dự án của tôi"></div>
+        <div class="send" data-ui="project-send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div>
+      </div>
+      <div class="empty">Chats in this project will appear here</div>
+      <div class="menu" data-ui="project-menu" data-off>
+        <div class="item" data-ui="project-settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg><span class="lab">Project settings</span></div>
+        <div class="item"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M12 3v12M7 8l5-5 5 5M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><span class="lab">Share</span></div>
+        <div class="item danger"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e02e2a" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg><span class="lab">Delete project</span></div>
+      </div>
+    </section>
+
+    <!-- a chat in the project: the request (kept vague) and the reply, a prompt in a code block -->
+    <section class="chat" data-ui="chat-view" data-off>
+      <div class="msg-user" data-ui="user-msg"><span class="uid-sk" style="width:88%"></span></div>
+      <div class="rep" data-ui="reply">
+        <div class="rep-intro" data-ui="reply-intro" data-off><span class="uid-sk" style="width:62%"></span></div>
+        <div class="code" data-ui="codebox" data-off>
+          <div class="code-head"><span>Prompt</span><div class="copy" data-ui="copy-reply"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3d3d3d" stroke-width="2"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span data-ui="copy-label">Copy</span></div></div>
+          <div class="code-body">
+            <div data-ui="c1" data-off><span class="uid-sk" style="width:92%"></span></div>
+            <div data-ui="c2" data-off><span class="uid-sk" style="width:84%"></span></div>
+            <div data-ui="c3" data-off><span class="uid-sk" style="width:96%"></span></div>
+            <div data-ui="c4" data-off><span class="uid-sk" style="width:71%"></span></div>
+            <div data-ui="c5" data-off><span class="uid-sk" style="width:89%"></span></div>
+            <div data-ui="c6" data-off><span class="uid-sk" style="width:80%"></span></div>
+            <div data-ui="c7" data-off><span class="uid-sk" style="width:52%"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="composer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d0d0d" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+        <span class="ph">Ask anything</span>
+        <div class="send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 19V5M6 11l6-6 6 6"/></svg></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="ov" data-ui="overlay" data-off></div>
+
+  <div class="modal" data-ui="new-project-modal" data-off>
+    <div class="m-head"><h3>Create project</h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5d5d5d" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></div>
+    <div class="field" data-ui="project-name" data-placeholder="Copenhagen Trip"></div>
+    <div class="icons"><span style="background:#0E78D0"></span><span style="background:#10a37f"></span><span style="background:#f59e0b"></span><span style="background:#ef4444"></span><span style="background:#8b5cf6"></span><span style="background:#6b7280"></span></div>
+    <p class="hint">Projects keep chats, files, and custom instructions in one place. Use them for ongoing work, or just to keep things tidy.</p>
+    <div class="m-foot"><div class="btn dark" data-ui="create-project">Create project</div></div>
+  </div>
+
+  <div class="modal ins" data-ui="instructions-modal" data-off>
+    <div class="m-head"><h3>Project settings</h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5d5d5d" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></div>
+    <div class="field-lab">Name</div>
+    <div class="field thin">Dự án của tôi</div>
+    <div class="field-lab" data-ui="instructions-title">Instructions</div>
+    <p class="sub">How can ChatGPT best help you with this project?</p>
+    <div class="area" data-ui="instructions-field" data-placeholder="e.g. &quot;Respond in Spanish. Reference the latest JavaScript documentation. Keep answers short and focused.&quot;"></div>
+    <div class="m-foot"><div class="btn ghost">Cancel</div><div class="btn dark" data-ui="save">Save</div></div>
+  </div>
+</div>

@@ -1,0 +1,96 @@
+{
+  "name": "quick-take",
+  "guide": "FORMAT.md",
+  "refs": [],
+  "targets": {
+    "cutsPerMin": [
+      18,
+      30
+    ],
+    "medianShot": [
+      1.9,
+      2.8
+    ],
+    "maxShot": 6,
+    "presenterShare": [
+      0.25,
+      0.4
+    ],
+    "subtitleCoverage": 0.9,
+    "flashesPerMin": [
+      0,
+      3
+    ],
+    "bedBelowVoice": [
+      13,
+      17
+    ]
+  },
+  "layouts": {
+    "presenter": 0.35,
+    "split": 0.25,
+    "full": 0.27,
+    "card": 0.13
+  },
+  "shots": {
+    "brand": {
+      "bg": "linear-gradient(160deg, #fbd9bd 0%, #f6a35f 55%, #ee7d2b 100%)",
+      "card": {
+        "x": 76,
+        "y": 230,
+        "w": 929,
+        "h": 557,
+        "r": 40
+      }
+    },
+    "split": {
+      "h": 0.5,
+      "faceAt": 0.36
+    },
+    "frames": {
+      "wide": 1,
+      "punch": 1.14,
+      "tight": 1.28
+    },
+    "in": "cut",
+    "out": "cut",
+    "cardIn": "pop",
+    "stillDrift": true,
+    "drift": 1.07
+  },
+  "captions": {
+    "style": {
+      "entrance": "cut",
+      "exit": "cut",
+      "w": {
+        "size": 66,
+        "weight": 800
+      },
+      "t": {
+        "size": 124,
+        "weight": 900
+      }
+    },
+    "chunk": {
+      "maxWords": 4,
+      "maxChars": 20,
+      "minDur": 0.45
+    },
+    "top": {
+      "presenter": 0.69,
+      "behind": 0.69,
+      "card": 0.69,
+      "split": 0.455,
+      "full": 0.74
+    },
+    "titlesEvery": 25
+  },
+  "sound": {
+    "bgm": {
+      "below": 14
+    },
+    "cues": "auto",
+    "captionSfx": []
+  },
+  "cover": true
+}

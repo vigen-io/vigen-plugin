@@ -1,0 +1,89 @@
+<!--
+  ui-demo screen: a generic short-video post with its comment panel (simplified, not any one app; light theme,
+  Vietnamese UI labels). The post is this video (a frame of the presenter); other commenters are invented handles.
+  Fidelity: no reference — a neutral mock, not a recreation of a real app.
+
+  Per-video: the two images (a frame of the video and the presenter's face) —
+    ffmpeg -ss <t> -i assets/talking.mp4 -frames:v 1 -vf "scale=360:640:force_original_aspect_ratio=increase,crop=360:640" assets/media/ui/post-thumb.jpg
+    ffmpeg -i koi/<name>/avatar_frame.png -vf "crop=300:300:<x>:<y>,scale=112:112" assets/media/ui/avatar.jpg   (x, y from koi.json layout)
+  the channel name (ask the user; never guess a handle), the caption, and the comment word the script asks for
+  ("Master Prompt") in the existing comments and in [data-ui=my-comment]. The input sits ABOVE the comments
+  (YouTube-style) so it is in the clear band, not behind the presenter's head.
+  Used in: master-prompt-cuong-v4 (koi), 2026-11-04.
+
+  Targets (data-ui):
+    post  follow  following  caption  comments  my-comment  comment-input  comment-send
+-->
+<style>
+  .sp-app { width: 1280px; height: 800px; display: flex; background: #fff; color: #161823; font-size: 15px; }
+  svg { display: block; flex: none; }
+  img { display: block; }
+  .sp-stage { width: 560px; height: 100%; background: #121212; display: flex; align-items: center; justify-content: center; }
+  .sp-post { position: relative; width: 360px; height: 640px; border-radius: 18px; overflow: hidden; }
+  .sp-play { position: absolute; left: 150px; top: 290px; width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.35);
+    display: flex; align-items: center; justify-content: center; }
+  .sp-side { flex: 1; height: 100%; display: flex; flex-direction: column; padding: 26px 34px 22px; border-left: 1px solid #ececec; }
+  .sp-prof { display: flex; align-items: center; gap: 14px; }
+  .sp-av { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; }
+  .sp-name b { display: block; font-size: 18px; font-weight: 700; }
+  .sp-name small { display: block; color: #8a8b91; font-size: 13px; margin-top: 2px; }
+  .sp-btns { position: relative; margin-left: auto; width: 132px; height: 42px; }
+  .sp-follow, .sp-following { position: absolute; inset: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; }
+  .sp-follow { background: #0E78D0; color: #fff; }
+  .sp-following { background: #f1f1f2; color: #161823; gap: 6px; }
+  .sp-cap { margin: 18px 0 4px; font-size: 16px; line-height: 1.45; }
+  .sp-cap span { color: #0E78D0; font-weight: 600; }
+  .sp-stats { display: flex; gap: 22px; color: #5c5d63; font-size: 14px; padding: 12px 0 16px; border-bottom: 1px solid #ececec; }
+  .sp-stats div { display: flex; align-items: center; gap: 6px; }
+  .sp-h { font-weight: 700; font-size: 16px; margin: 16px 0 8px; }
+  .sp-list { flex: 1; overflow: hidden; }
+  .sp-c { display: flex; gap: 12px; padding: 10px 0; }
+  .sp-c .ini { width: 40px; height: 40px; border-radius: 50%; color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; flex: none; }
+  .sp-c .who { font-size: 13px; color: #8a8b91; font-weight: 600; }
+  .sp-c .txt { font-size: 16px; margin-top: 2px; }
+  .sp-c.me { margin: 0 -10px; padding: 10px; border-radius: 12px; background: #eef6ff; }
+  .sp-c.me .who { color: #0E78D0; }
+  .sp-in { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; }
+  .sp-field { flex: 1; height: 46px; display: flex; align-items: center; padding: 0 16px; border-radius: 23px; background: #f1f1f2; font-size: 16px; overflow: hidden; }
+  .sp-send { width: 46px; height: 46px; border-radius: 50%; background: #0E78D0; display: flex; align-items: center; justify-content: center; }
+</style>
+<div class="sp-app">
+  <div class="sp-stage">
+    <div class="sp-post" data-ui="post">
+      <img src="assets/media/ui/post-thumb.jpg" width="360" height="640" alt="" />
+      <div class="sp-play"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+    </div>
+  </div>
+  <div class="sp-side">
+    <div class="sp-prof">
+      <div class="sp-av"><img src="assets/media/ui/avatar.jpg" width="56" height="56" alt="" /></div>
+      <div class="sp-name"><b>Tên kênh</b><small>Mô tả kênh</small></div>
+      <div class="sp-btns">
+        <div class="sp-follow" data-ui="follow">Follow</div>
+        <div class="sp-following" data-ui="following" data-off><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#161823" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Following</div>
+      </div>
+    </div>
+    <div class="sp-cap" data-ui="caption">Tiêu đề video <span>#hashtag</span></div>
+    <div class="sp-stats">
+      <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5c5d63" stroke-width="2"><path d="M12 21s-7-4.4-9.3-9C1 8.6 3 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5 19 5 21 8.6 19.3 12 17 16.6 12 21 12 21Z"/></svg>Thích</div>
+      <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5c5d63" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.7 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg>Bình luận</div>
+      <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5c5d63" stroke-width="2"><path d="M14 4l7 7-7 7M21 11H9a6 6 0 0 0-6 6v1"/></svg>Chia sẻ</div>
+    </div>
+    <div class="sp-h">Bình luận</div>
+    <div class="sp-in">
+      <div class="sp-field" data-ui="comment-input" data-placeholder="Thêm bình luận..."></div>
+      <div class="sp-send" data-ui="comment-send"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></div>
+    </div>
+    <div class="sp-list" data-ui="comments">
+      <div class="sp-c me" data-ui="my-comment" data-off data-grow>
+        <div class="ini" style="background:#0E78D0">B</div>
+        <div><div class="who">Bạn · vừa xong</div><div class="txt">Master Prompt</div></div>
+      </div>
+      <div class="sp-c"><div class="ini" style="background:#f59e0b">M</div><div><div class="who">minh.tran · 2 phút</div><div class="txt">Master Prompt</div></div></div>
+      <div class="sp-c"><div class="ini" style="background:#10b981">L</div><div><div class="who">linh.ng · 5 phút</div><div class="txt">Master Prompt ạ</div></div></div>
+      <div class="sp-c"><div class="ini" style="background:#8b5cf6">H</div><div><div class="who">hoang.dev · 9 phút</div><div class="txt">Cho mình xin Master Prompt với</div></div></div>
+      <div class="sp-c"><div class="ini" style="background:#ef4444">T</div><div><div class="who">thao.le · 12 phút</div><div class="txt">Master Prompt</div></div></div>
+    </div>
+  </div>
+</div>

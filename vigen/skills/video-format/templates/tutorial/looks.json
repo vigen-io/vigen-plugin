@@ -1,0 +1,25 @@
+{
+  "about": "The koi's walkthrough look: an EDIT of the koi's own photo (image 1 = the koi frame: who, room, clothes, light) with image 2 = the look's `shot` as a pose reference only (turned to a monitor at the frame's left edge). Not the garden-storytime recreate formula: the hook is the koi's own photo, so the walkthrough must be the same room and outfit. Standard model, 16:9 at 1K (1376×768): the window is 16:9, so it shows the whole frame; a square look forces the head to fill the window (tried: the head stays ~45 % of a square frame whatever the prompt says). Part 2 is lipsynced from this 16:9 frame and placed in the plate on its own (FORMAT.md § 0). Save with `vigen.mjs koi add-look <koiDir> --template tutorial --look screen --frame <file>`; lipsync part 2 with it (`<parts>/looks.json` { \"2\": \"tutorial-screen\" }). {{room}} and {{outfit}} name what image 1 shows (\"the bookshelves, the warm lamp, the softbox lights\"; \"a dark grey knit polo shirt\"); {{mic}} is \", the same microphone on its boom arm in the same place\" when the photo has one, else empty.",
+  "image": {
+    "aspect": "16:9",
+    "size": "1K",
+    "model": "standard"
+  },
+  "prompt": "Edit image 1 into a new photo of the same scene from the same camera: the same person, the same room ({{room}}), the same clothes ({{outfit}}){{mic}}, and the same light and colours as image 1.\n\nChange only the pose and add a monitor: the person now sits turned about 40 degrees toward the left edge of the frame, head and eyes on a computer monitor that stands at the left edge of the frame, its dark back and edge visible out of focus in the foreground, as in image 2. They are working at the computer, focused on the screen. Image 2 is only a reference for that pose, the angle of the face, the framing and where the monitor sits: ignore its person, room, colours and any text in it.\n\nThe face stays fully visible and sharp in a three-quarter view with both eyes visible, lips gently closed with a calm, focused expression (no teeth showing). The microphone never covers the mouth. Exactly one person. A landscape frame like image 2's: the person a little right of centre, the head about half the frame's height with clear space above it, the shoulders and upper chest in view down to the bottom edge, the monitor's edge at the left and the room filling the rest. No text, no captions, no logos, no screen content visible, no watermark. Photorealistic.",
+  "looks": [
+    {
+      "name": "screen",
+      "shot": "shots/screen.jpg",
+      "kind": "edit",
+      "use": "the walkthrough (part 2): working at the computer while saying the steps",
+      "share": 0.7,
+      "subTop": 0.25
+    }
+  ],
+  "keep": [
+    {
+      "name": "hook",
+      "use": "the hook (part 1) and nothing else: the koi's own photo, talking to the lens"
+    }
+  ]
+}

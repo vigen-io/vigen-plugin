@@ -1,0 +1,109 @@
+{
+  "name": "verdict-board",
+  "guide": "FORMAT.md",
+  "voices": 2,
+  "refs": [],
+  "targets": {
+    "cutsPerMin": [
+      2,
+      10
+    ],
+    "presenterShare": [
+      0.95,
+      1
+    ],
+    "subtitleCoverage": 0.9,
+    "flashesPerMin": [
+      0,
+      0
+    ],
+    "bedBelowVoice": [
+      8,
+      15
+    ]
+  },
+  "layouts": {
+    "presenter": 1.0
+  },
+  "brand": {
+    "font": "Be Vietnam Pro",
+    "accent": "#5BE33C",
+    "tiers": [
+      {
+        "name": "HURTS",
+        "color": "#A8001E"
+      },
+      {
+        "name": "NO EFFECT",
+        "color": "#CC9E0C"
+      },
+      {
+        "name": "HELPS",
+        "color": "#3AAA35"
+      }
+    ]
+  },
+  "shots": {
+    "frames": {
+      "wide": 1,
+      "punch": 1.15
+    },
+    "in": "cut",
+    "out": "cut"
+  },
+  "captions": {
+    "style": {
+      "entrance": "cut",
+      "exit": "cut",
+      "highlight": "#5BE33C",
+      "maxWidth": 900,
+      "w": {
+        "size": 76,
+        "weight": 800,
+        "outline": "rgba(0,0,0,0.85)",
+        "outlineWidth": 3
+      }
+    },
+    "question": "#FFD21F",
+    "chunk": {
+      "maxWords": 4,
+      "maxChars": 26,
+      "minDur": 0.45,
+      "keepPunctuation": true
+    },
+    "top": {
+      "presenter": 0.75,
+      "behind": 0.75
+    }
+  },
+  "cards": {
+    "size": {
+      "w": 1080,
+      "h": 1920
+    }
+  },
+  "sound": {
+    "bgm": {
+      "below": 13
+    },
+    "cues": "auto",
+    "captionSfx": []
+  },
+  "item": {
+    "seconds": [
+      5,
+      9
+    ],
+    "pauseAfterQuestion": [
+      0.6,
+      1.2
+    ]
+  },
+  "cover": false,
+  "interview": {
+    "interviewer": "required: a second, voice-only koi that asks every Q: line (FORMAT.md § 0b)",
+    "qPause": 0.7,
+    "turnGap": 0.45,
+    "questionBelowAnswerDb": 2
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "name": "brand-building",
+  "guide": "FORMAT.md",
+  "refs": [],
+  "targets": {
+    "cutsPerMin": [
+      30,
+      45
+    ],
+    "medianShot": [
+      0.7,
+      1.3
+    ],
+    "maxShot": 6.5,
+    "presenterShare": [
+      0.4,
+      0.6
+    ],
+    "subtitleCoverage": 0.8,
+    "flashesPerMin": [
+      0.5,
+      3
+    ],
+    "bedBelowVoice": [
+      10,
+      16
+    ]
+  },
+  "layouts": {
+    "presenter": 0.5,
+    "full": 0.35,
+    "type": 0.15
+  },
+  "brand": {
+    "font": "Inter",
+    "accent": "#840311",
+    "statColor": "#840311",
+    "bg": "#370004",
+    "colors": {
+      "money": "#840311",
+      "white": "#EEEEEE",
+      "yellow": "#F3A520",
+      "yellowInk": "#C10028",
+      "red": "#CA100F",
+      "black": "#060B0A",
+      "maroon": "#370004",
+      "cream": "#F2E8DF",
+      "creamCard": "#F7EBDE",
+      "grey": "#F3F3F3",
+      "ink": "#111111"
+    }
+  },
+  "shots": {
+    "frames": {
+      "wide": 1,
+      "punch": 1.18,
+      "tight": 1.3
+    },
+    "in": "cut",
+    "out": "cut"
+  },
+  "captions": {
+    "style": {
+      "font": "Inter",
+      "fonts": [
+        {
+          "family": "Inter",
+          "file": "formats/brand-building/fonts/Inter.ttf",
+          "weight": "100 900"
+        }
+      ],
+      "entrance": "cut",
+      "exit": "cut",
+      "maxWidth": 900,
+      "w": {
+        "size": 52,
+        "weight": 600
+      },
+      "b": {
+        "size": 130,
+        "weight": 800,
+        "color": "#ffffff",
+        "outline": "transparent"
+      }
+    },
+    "chunk": {
+      "maxWords": 2,
+      "maxChars": 7,
+      "minDur": 0.2,
+      "keepPunctuation": true,
+      "lead": 0.12
+    },
+    "top": {
+      "presenter": 0.484,
+      "behind": 0.484,
+      "card": 0.484,
+      "split": 0.484,
+      "full": 0.484
+    },
+    "emphasis": {
+      "size": 88
+    }
+  },
+  "cards": {
+    "size": {
+      "w": 1080,
+      "h": 1920
+    }
+  },
+  "sound": {
+    "bgm": {
+      "below": 13
+    },
+    "cues": "auto",
+    "captionSfx": []
+  },
+  "cover": false
+}

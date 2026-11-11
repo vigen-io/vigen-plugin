@@ -1,0 +1,45 @@
+<!-- The result reveal ("…and made a total profit of $1,284. Ouch."): full-frame colour cards that flip on every
+     beat while the number types in digit by digit, white → yellow → red → black, then the unit word. Each beat
+     0.5–0.7 s; the whole reveal 2–2.8 s, cut hard in and out (straight into the presenter's reaction).
+     Measured at 1080×1920: the number ≈ 84 px Inter Bold centred at y ≈ 940; the unit 30 px semibold.
+
+     Copy into the project's cards/, edit BEATS (the digits on screen from each time, the background and the
+     number's colour) and UNIT, retimed so the last beat lands on the number's last syllable. Place it with the
+     shots layout "full", "subs": false. -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 100 900; src: url("assets/fonts/Inter.ttf"); }
+  .ct-bg { position: absolute; inset: 0; }
+  .ct-row { position: absolute; left: 0; width: 1080px; top: 892px; display: flex; justify-content: center; align-items: baseline;
+    font-family: "Inter"; white-space: nowrap; }
+  .ct-num { position: relative; font-size: 84px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  .ct-num span { position: absolute; left: 0; top: 0; opacity: 0; }
+  .ct-num .ct-full { position: static; visibility: hidden; opacity: 1; }
+  .ct-unit { margin-left: 10px; font-size: 30px; font-weight: 600; opacity: 0; }
+</style>
+<div class="ct-bg" id="ct-bg"></div>
+<div class="ct-row"><div class="ct-num" id="ct-num"></div><div class="ct-unit" id="ct-unit"></div></div>
+<script>
+  // ── edit these (video seconds) ──
+  const BEATS = [
+    { at: S + 0.0, text: "$1,", bg: "#EEEEEE", color: "#0A0A0A" },
+    { at: S + 0.67, text: "$1,2", bg: "#F3A520", color: "#C10028" },
+    { at: S + 1.33, text: "$1,28", bg: "#CA100F", color: "#FFFFFF" },
+    { at: S + 1.97, text: "$1,284", bg: "#060B0A", color: "#FFFFFF" },
+  ];
+  const UNIT = { text: "dollars", at: S + 1.97 };
+
+  const q = (s) => CARD + " " + s;
+  const num = document.querySelector(q("#ct-num"));
+  num.innerHTML = `<span class="ct-full">${BEATS.at(-1).text}</span>` + BEATS.map((b, i) => `<span id="ct-s${i}" style="color:${b.color}">${b.text}</span>`).join("");
+  const unit = document.querySelector(q("#ct-unit"));
+  unit.textContent = UNIT.text;
+  BEATS.forEach((b, i) => {
+    tl.set(q("#ct-bg"), { backgroundColor: b.bg }, b.at);
+    tl.set(q(`#ct-s${i}`), { opacity: 1 }, b.at);
+    if (i < BEATS.length - 1) tl.set(q(`#ct-s${i}`), { opacity: 0 }, BEATS[i + 1].at);
+  });
+  // the unit takes the colour of the beat it lands on
+  const on = [...BEATS].reverse().find((b) => b.at <= UNIT.at + 0.001) || BEATS[0];
+  unit.style.color = on.color;
+  if (UNIT.text) tl.set(q("#ct-unit"), { opacity: 1 }, UNIT.at);
+</script>

@@ -1,0 +1,12 @@
+{
+  "why": "Sounds the user rejected by ear, for every video, forever. sfx-pool.mjs never pulls a match and replaces any already in a pool; mix.mjs refuses to place one. Add with: sfx-pool.mjs <project> --ban-forever \"Name\". Never remove an entry unless the user asks.",
+  "names": [
+    { "name": "Whip swoosh impact", "said": "2026-11-03 'horror movie effect'; 2026-11-06 at 10 s of ga-ran-gian-khoan-v2: ABSOLUTELY blacklist, never use again" },
+    { "name": "Digital notification chime", "said": "notification chimes rejected 2026-11-03 ('horror movie effect')" }
+  ],
+  "patterns": [
+    { "match": "whip\\s*swoosh\\s*impact", "said": "the same sound under any title" },
+    { "match": "notification|\\bchime", "said": "notification chimes: rejected 2026-11-03" },
+    { "match": "\\bbrass\\b|cinematic (hit|impact|boom)", "said": "cinematic brass hits: 'too big', 2026-11-03" }
+  ]
+}

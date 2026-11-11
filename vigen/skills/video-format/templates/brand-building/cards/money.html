@@ -1,0 +1,40 @@
+<!-- The hook's number: the amount the presenter put in ("I put $9,400 into…"), typed in over the take as it is
+     said, in place of the subtitle. Heavy dark-red digits a little below the centre, a small white unit word
+     beside the baseline a beat later. Measured at 1080×1920: the number ≈ 150 px Inter ExtraBold #840311,
+     centred at y ≈ 1050; the unit 34 px semibold white.
+
+     Copy into the project's cards/, set STEPS (what is on screen from each time: the digits as they are said,
+     "$9," then "$9,400") and UNIT (the word and when it lands), retimed to transcript.json. Place it with the
+     shots layout "over", "subs": false (the number replaces the subtitle), from the first step to the start
+     of the next spoken word (the subtitles come back then: any later and they overlap the number).
+     cards.json "bg": "transparent". -->
+<style>
+  @font-face { font-family: "Inter"; font-weight: 100 900; src: url("assets/fonts/Inter.ttf"); }
+  .mn-row { position: absolute; left: 0; width: 1080px; top: 975px; display: flex; justify-content: center; align-items: baseline;
+    font-family: "Inter"; white-space: nowrap; }
+  .mn-num { position: relative; font-size: 150px; font-weight: 800; letter-spacing: -0.035em; color: #840311; line-height: 1; }
+  .mn-num span { position: absolute; left: 0; top: 0; opacity: 0; }
+  .mn-num .mn-full { position: static; visibility: hidden; opacity: 1; }
+  .mn-unit { margin-left: 14px; font-size: 34px; font-weight: 600; color: #fff; opacity: 0;
+    text-shadow: 0 2px 2px rgba(0, 0, 0, 0.35), 0 4px 14px rgba(0, 0, 0, 0.4); }
+</style>
+<div class="mn-row"><div class="mn-num" id="mn-num"></div><div class="mn-unit" id="mn-unit"></div></div>
+<script>
+  // ── edit these (video seconds) ──
+  const STEPS = [
+    { at: S + 0.0, text: "$9," },
+    { at: S + 0.5, text: "$9,400" },
+  ];
+  const UNIT = { text: "dollars", at: S + 0.84 };
+
+  const q = (s) => CARD + " " + s;
+  const num = document.querySelector(q("#mn-num"));
+  // the full number holds the width, so the row never shifts while the digits type in (left-aligned in it)
+  num.innerHTML = `<span class="mn-full">${STEPS.at(-1).text}</span>` + STEPS.map((s, i) => `<span id="mn-s${i}">${s.text}</span>`).join("");
+  document.querySelector(q("#mn-unit")).textContent = UNIT.text;
+  STEPS.forEach((s, i) => {
+    tl.set(q(`#mn-s${i}`), { opacity: 1 }, s.at);
+    if (i < STEPS.length - 1) tl.set(q(`#mn-s${i}`), { opacity: 0 }, STEPS[i + 1].at);
+  });
+  if (UNIT.text) tl.set(q("#mn-unit"), { opacity: 1 }, UNIT.at);
+</script>
