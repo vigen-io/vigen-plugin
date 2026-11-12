@@ -5,15 +5,18 @@
 //   node parts.mjs plan <script.txt> [--max 400]
 //       the split, free: { reason, parts: [{ index, text, chars, estSeconds }] }
 //   node parts.mjs voice --koi <koiDir> --script <script.txt> --out <dir> [--max 400] [--language xx] [--redo N[,M]]
-//       per part, before any lipsync: the voice (<out>/part-NN.mp3) and its timed phrases (part-NN.timeline.json),
+//       per part, before any lipsync: the voice (<out>/part-NN.mp3, voiced line by line: one TTS call per line, the
+//       takes in <out>/lines/, each line's time in part-NN.lines.json) and its timed phrases (part-NN.timeline.json),
 //       so a gesture plan can be timed on the real audio and saved as part-NN.gestures.json; also <out>/voice-preview.mp3
 //       (all parts back to back) for the user to listen to before any lipsync. --redo N[,M] makes a new TTS take of
 //       those parts (their gesture plans are listed in retimeGestures: re-time them on the new audio).
 //       Every voice ends on --tail seconds of silence (default 0.4, padded once): the presenter settles before the cut.
 //   node parts.mjs review --koi <koiDir> --script <script.txt> --out <dir> [--ui vi|en] [--port N] [--open]
-//       the voices on a local page (127.0.0.1, behind a random token): every part's text (editable), its take and a
-//       "Tạo lại" button that makes a new TTS take of that part (an edited text is written back to the script). Runs
-//       until the user clicks Done (or SIGINT/SIGTERM), then prints { preview, parts, redone, edited, retimeGestures }.
+//       the voices on a local page (127.0.0.1, behind a random token): every part as its lines (each its own TTS
+//       call, see blocksOf), each with its text (editable), a play button and "Tạo lại": a new TTS take of that line,
+//       played in place and joined into the part's voice only when the user keeps it ("Dùng"); the whole part can be
+//       re-taken too. An edited text is written back to the script. Runs until the user clicks Done (or
+//       SIGINT/SIGTERM), then prints { preview, parts, redone, edited, lines, retimeGestures }.
 //       The page's URL is printed on stderr; --open also opens it in the default browser.
 //   node parts.mjs run --koi <koiDir> --script <script.txt> --out <dir> [--max 400] [--language xx]
 //                      [--prompt-file F] [--seed N] [--redo N] [--look NAME]
@@ -92,10 +95,13 @@ export function planParts(raw, maxChars = DEFAULT_MAX) {
     const paras = block.split(/\n\s*\n/);
     let cur = "";
     for (let pi = 0; pi < paras.length; pi++) {
-      const sentences = paras[pi].replace(/\n/g, " ").match(/[^.!?…]+[.!?…]+["”’)]*|[^.!?…]+$/g) || [paras[pi]];
-      for (const s of sentences.map((x) => x.trim()).filter(Boolean)) {
-        if (cur && (cur + " " + s).length > maxChars) (parts.push(cur.trim()), (cur = ""));
-        cur += (cur ? " " : "") + s;
+      // a line break stays one (each line is its own TTS block, see blocksOf)
+      for (const line of paras[pi].split("\n")) {
+        const sentences = line.match(/[^.!?…]+[.!?…]+["”’)]*|[^.!?…]+$/g) || [line];
+        for (const [si, s] of sentences.map((x) => x.trim()).filter(Boolean).entries()) {
+          if (cur && (cur + " " + s).length > maxChars) (parts.push(cur.trim()), (cur = ""));
+          cur += (!cur || cur.endsWith("\n") ? "" : si === 0 ? "\n" : " ") + s;
+        }
       }
       if (cur.length >= 0.4 * maxChars && pi < paras.length - 1) (parts.push(cur.trim()), (cur = ""));
       else if (cur) cur += "\n\n";
@@ -164,7 +170,8 @@ function loadState(flags) {
     return { mp3: path.join(out, `part-${id}.mp3`), mp4: path.join(out, `part-${id}.mp4`),
       timeline: path.join(out, `part-${id}.timeline.json`), gestures: path.join(out, `part-${id}.gestures.json`),
       transcript: path.join(out, `part-${id}.transcript.json`), render: path.join(out, `part-${id}.render.json`),
-      full: path.join(out, `part-${id}.full.mp3`), turns: path.join(out, `part-${id}.turns.json`) };
+      full: path.join(out, `part-${id}.full.mp3`), turns: path.join(out, `part-${id}.turns.json`),
+      lines: path.join(out, `part-${id}.lines.json`) };
   };
   // the interviewer koi is remembered, so `run` (and a --redo) voices the questions the same way
   if (typeof flags.interviewer === "string") state.interviewer = flags.interviewer;
@@ -186,6 +193,8 @@ export function turnsOf(text) {
   return turns;
 }
 const isInterview = (text) => /(^|[\s.!?…])Q:/.test(text);
+// a voice's silence cut off both ends (one end, then reversed), keeping 20 ms before the first sound
+const TRIM = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02";
 
 // An interview part: every turn voiced on its own (the question in the interviewer's voice), trimmed, and laid on
 // one clock with exact gaps. Writes the koi-only lipsync audio (f.mp3), both voices (f.full) and the turn times.
@@ -197,7 +206,6 @@ async function interviewVoice(p, f, flags, state) {
   const dir = path.join(path.dirname(f.mp3), "turns");
   mkdirSync(dir, { recursive: true });
   const id = path.basename(f.mp3, ".mp3");
-  const trim = "silenceremove=start_periods=1:start_threshold=-45dB:start_silence=0.02";
   const turns = turnsOf(p.text);
   const pieces = [];
   for (const [k, t] of turns.entries()) {
@@ -209,7 +217,7 @@ async function interviewVoice(p, f, flags, state) {
     // two cloned voices come out at different levels (one interviewer read 8 dB under the koi): every turn is
     // levelled, the off-screen question 2 dB under the answer
     const level = `loudnorm=I=${t.speaker === "q" ? -18 : -16}:TP=-1.5:LRA=11`;
-    await ffmpeg(["-i", raw, "-af", `${trim},areverse,${trim},areverse,${level},aresample=48000`, "-ac", "1", wav]);
+    await ffmpeg(["-i", raw, "-af", `${TRIM},areverse,${TRIM},areverse,${level},aresample=48000`, "-ac", "1", wav]);
     pieces.push({ ...t, wav, seconds: await duration(wav) });
   }
   // one clock: a silence before each turn (lead, the pause after a question, the gap before the next question)
@@ -233,27 +241,31 @@ async function interviewVoice(p, f, flags, state) {
   p.tail = tail;
 }
 
+// The pauses in a voice: { start, end } of every stretch quieter than -40 dB for `min` seconds or more (the last one
+// runs to the end of the file when nothing follows it)
+async function pauses(file, min = 0.03) {
+  const { err } = await runTool("ffmpeg", ["-hide_banner", "-i", file, "-af", `silencedetect=noise=-40dB:d=${min}`, "-f", "null", "-"]);
+  const found = [];
+  for (const m of err.matchAll(/silence_(start|end): (-?[0-9.]+)/g)) {
+    if (m[1] === "start") found.push({ start: Math.max(0, Number(m[2])), end: Infinity });
+    else if (found.length) found[found.length - 1].end = Number(m[2]);
+  }
+  return found;
+}
+
 // Seconds of silence at the end of a file (nothing quieter than -40 dB for 30 ms runs to the end: 0)
 async function trailingSilence(file) {
   const total = await duration(file);
-  const { err } = await runTool("ffmpeg", ["-hide_banner", "-i", file, "-af", "silencedetect=noise=-40dB:d=0.03", "-f", "null", "-"]);
-  let start = null, end = null;
-  for (const m of err.matchAll(/silence_(start|end): ([0-9.]+)/g)) {
-    if (m[1] === "start") (start = Number(m[2])), (end = null);
-    else end = Number(m[2]);
-  }
+  const last = (await pauses(file)).at(-1);
   // an mp3's container runs ~50 ms past its last decoded sample (encoder padding): a silence ending there ran to the end
-  return start != null && (end == null || end >= total - 0.08) ? total - start : 0;
+  return last && last.end >= total - 0.08 ? total - last.start : 0;
 }
 
-// A part's voice: TTS when it has none, then padded to end on `tail` seconds of silence (once; `p.tail` records it)
+// A part's voice: voiced line by line when it has none (ending on `tail` seconds of silence); a voice made before
+// (one TTS call for the whole part) is padded to end on it once (`p.tail` records it)
 async function voiceOf(p, f, flags, state) {
   if (!existsSync(f.mp3) && isInterview(p.text)) await interviewVoice(p, f, flags, state);
-  if (!existsSync(f.mp3)) {
-    say(`part ${p.index}: TTS (${p.chars} chars)`);
-    await vigen("tts", "--koi", flags.koi, "--text", p.text, "--out", f.mp3, ...(flags.language ? ["--language", flags.language] : []));
-    delete p.tail;
-  }
+  if (!existsSync(f.mp3)) await voiceLines(p, f, flags);
   if (p.tail == null) {
     const want = flags.tail != null ? Number(flags.tail) : DEFAULT_TAIL;
     const have = await trailingSilence(f.mp3);
@@ -267,16 +279,129 @@ async function voiceOf(p, f, flags, state) {
   }
 }
 
-// A part's voice and everything timed on it are dropped, so the next voiceOf makes a new TTS take. Returns the part's
-// gesture plan when it has one: that plan has to be re-timed on the new audio
-function dropVoice(p, f, out) {
-  for (const x of [f.mp3, f.full, f.turns, f.timeline, f.transcript, f.mp4]) rmSync(x, { force: true });
-  // this part's voiced turns too, so an interview part gets a new take of every turn
-  const turnDir = path.join(out, "turns"), stem = path.basename(f.mp3, ".mp3") + "-t";
-  if (existsSync(turnDir)) for (const x of readdirSync(turnDir)) if (x.startsWith(stem)) rmSync(path.join(turnDir, x), { force: true });
+// Everything timed on a part's voice is dropped (its voice changed). Returns the part's gesture plan when it has one:
+// that plan has to be re-timed on the new audio
+function dropTimed(p, f) {
+  for (const x of [f.timeline, f.transcript, f.mp4]) rmSync(x, { force: true });
   delete p.jobId;
-  delete p.tail;
   return existsSync(f.gestures) ? f.gestures : null;
+}
+
+// A part's voice and everything timed on it are dropped, so the next voiceOf makes a new TTS take
+function dropVoice(p, f, out) {
+  for (const x of [f.mp3, f.full, f.turns, f.lines]) rmSync(x, { force: true });
+  // this part's voiced turns and lines too, so it gets a new take of every one
+  for (const [sub, stem] of [["turns", "-t"], ["lines", "-l"]]) {
+    const dir = path.join(out, sub), start = path.basename(f.mp3, ".mp3") + stem;
+    if (existsSync(dir)) for (const x of readdirSync(dir)) if (x.startsWith(start)) rmSync(path.join(dir, x), { force: true });
+  }
+  delete p.tail;
+  delete p.lines;
+  return dropTimed(p, f);
+}
+
+// A part's lines, each voiced by its own TTS call and re-takeable on its own: the server's TTS split
+// (packages/server/src/utils/split.ts, lucyai's "auto" mode), which voices every block of a text on its own and joins
+// them with 300 ms pauses, so the joined lines sound as one TTS call of the whole part does. Every line break makes
+// its own block (how a script asks for a line to stand alone); within a line, sentences (split at ".") are packed
+// into blocks of up to 200 chars, and a sentence over 200 is cut at its last comma within 200. Run on a copy where
+// "3." / ",." / ".." are masked the way the server rewrites them (no split there), so every block is { text, from,
+// to } of the part's own text (a block's length can differ from the server's by a character where it rewrites those)
+const BLOCK_MIN = 20, BLOCK_MAX = 200, LINE_PAUSE = 0.3;
+export function blocksOf(text) {
+  const masked = text.replace(/(\d+)\./g, (_, d) => d + ",").replace(/,\./g, ",\u0001").replace(/\.{2,}/g, (m) => "," + "\u0001".repeat(m.length - 1));
+  const blocks = [];
+  const push = (a, b) => {
+    // a ".," leaves its comma at the start of the next block (the server drops it): not part of the line
+    const piece = text.slice(a, b), lead = piece.length - piece.replace(/^[\s,]+/, "").length, said = text.slice(a + lead, b).trim();
+    if (said) blocks.push({ text: said, from: a + lead, to: a + lead + said.length });
+  };
+  let at = 0;
+  for (const line of masked.split("\n")) {
+    const L = at;
+    at += line.length + 1;
+    if (!line.trim()) continue;
+    const sentences = [];
+    let start = 0;
+    for (const m of line.matchAll(/[.]+/g)) (sentences.push([start, m.index + m[0].length]), (start = m.index + m[0].length));
+    if (start < line.length) sentences.push([start, line.length]);
+    let buffer = null; // [a, b) of the line
+    for (const [a, b] of sentences) {
+      if (!line.slice(a, b).trim()) continue;
+      const held = buffer ? buffer[1] - buffer[0] : 0, combined = held + (b - a);
+      if (combined > BLOCK_MAX && held >= BLOCK_MIN) (push(L + buffer[0], L + buffer[1]), (buffer = [a, b]));
+      else if (combined <= BLOCK_MAX) buffer = buffer ? [buffer[0], b] : [a, b];
+      else {
+        if (buffer) push(L + buffer[0], L + buffer[1]);
+        buffer = null;
+        if (b - a <= BLOCK_MAX) { buffer = [a, b]; continue; }
+        // a sentence too long for one block: cut at the last comma within the limit (else at the limit)
+        for (let r = a; r < b; ) {
+          if (b - r <= BLOCK_MAX) { buffer = [r, b]; break; }
+          const comma = line.slice(r, r + BLOCK_MAX).lastIndexOf(",");
+          const end = comma > 0 ? r + comma + 1 : r + BLOCK_MAX;
+          push(L + r, L + end);
+          for (r = end; r < b && /\s/.test(line[r]); r++);
+        }
+      }
+    }
+    if (buffer) push(L + buffer[0], L + buffer[1]);
+  }
+  return blocks;
+}
+
+// A part's lines with the take each one uses: the ones saved on the part while they still match its text, else its
+// blocks, not yet voiced (take 0)
+function linesOf(p) {
+  const kept = p.lines?.length && p.lines.every((l) => p.text.slice(l.from, l.to) === l.text);
+  return kept ? p.lines : blocksOf(p.text).map((b) => ({ ...b, take: 0 }));
+}
+
+// One take of a line: the TTS file (lines/part-NN-lK-tN.mp3) and the same trimmed to its sound (.wav)
+function lineTake(f, k, take) {
+  const mp3 = path.join(path.dirname(f.mp3), "lines", `${path.basename(f.mp3, ".mp3")}-l${k}-t${take}.mp3`);
+  return { mp3, wav: mp3.replace(/\.mp3$/, ".wav") };
+}
+
+async function voiceLine(f, k, take, text, flags) {
+  const x = lineTake(f, k, take);
+  mkdirSync(path.dirname(x.mp3), { recursive: true });
+  await vigen("tts", "--koi", flags.koi, "--text", text, "--out", x.mp3, ...(flags.language ? ["--language", flags.language] : []));
+  await ffmpeg(["-i", x.mp3, "-af", `${TRIM},areverse,${TRIM},areverse,aformat=sample_fmts=s16:sample_rates=48000:channel_layouts=mono`, x.wav]);
+  return x;
+}
+
+// A part's voice from its line takes: each line, a 300 ms pause (the server's, counting the 20 ms of quiet each
+// trimmed take keeps at both ends), then the part's tail of silence. Writes `dest`; returns every line's time in it
+async function joinLines(f, lines, dest, tail) {
+  const takes = lines.map((l, k) => l.wav ?? lineTake(f, k + 1, l.take).wav);
+  const lengths = [];
+  for (const w of takes) lengths.push(await duration(w));
+  const gap = LINE_PAUSE - 0.04;
+  const chains = takes.map((_, i) => `[${i}:a]aformat=sample_fmts=s16:sample_rates=48000:channel_layouts=mono,apad=pad_dur=${(i < takes.length - 1 ? gap : Math.max(0, tail - 0.02)).toFixed(3)}[a${i}]`);
+  await ffmpeg([...takes.flatMap((w) => ["-i", w]), "-filter_complex", `${chains.join(";")};${takes.map((_, i) => `[a${i}]`).join("")}concat=n=${takes.length}:v=0:a=1[o]`,
+    "-map", "[o]", "-c:a", "libmp3lame", "-q:a", "2", dest]);
+  let t = 0;
+  return lines.map((l, i) => {
+    const start = t;
+    t += lengths[i] + gap;
+    return { text: l.text, from: l.from, to: l.to, take: l.take, start: +start.toFixed(3), end: +(start + lengths[i]).toFixed(3) };
+  });
+}
+
+// A part's voice line by line: every line without a take is voiced (one TTS call each, one at a time: the account
+// runs one TTS at a time), then all joined into part-NN.mp3 and their times written to part-NN.lines.json
+async function voiceLines(p, f, flags) {
+  const lines = linesOf(p);
+  for (const [i, l] of lines.entries()) {
+    if (l.take && existsSync(lineTake(f, i + 1, l.take).wav)) continue;
+    say(`part ${p.index}: TTS line ${i + 1}/${lines.length} (${l.text.length} chars)`);
+    l.take = (l.take || 0) + 1;
+    await voiceLine(f, i + 1, l.take, l.text, flags);
+  }
+  p.lines = lines.map(({ text, from, to, take }) => ({ text, from, to, take }));
+  p.tail = flags.tail != null ? Number(flags.tail) : DEFAULT_TAIL;
+  writeFileSync(f.lines, JSON.stringify(await joinLines(f, p.lines, f.mp3, p.tail), null, 1) + "\n");
 }
 
 // The voice of every part, before any lipsync: <out>/part-NN.mp3 and its timed phrases in part-NN.timeline.json.
@@ -344,47 +469,128 @@ function readBody(req) {
   });
 }
 
-// The voices on a page, for the user to listen to part by part and re-take the bad ones without opening any file.
-// Served on 127.0.0.1 under a random token (another site in the browser can't spend TTS through it). One re-take at a
-// time; each one also rebuilds voice-preview.mp3. Ends when the user clicks Done, with what changed.
+// The voices on a page, for the user to listen to line by line and re-take the bad ones without opening any file.
+// Served on 127.0.0.1 under a random token (another site in the browser can't spend TTS through it). A line take is
+// voiced alone and played in place; only "keep" joins it into the part's voice, so a part with one bad line keeps the
+// rest of its take. One job at a time; each change also rebuilds voice-preview.mp3. Ends when the user clicks Done,
+// with what changed.
 async function reviewParts(flags) {
   const ctx = loadState(flags);
   const { out, state, files } = ctx;
   let voices = await voiceAll(ctx, flags);
   const token = randomBytes(9).toString("hex");
   const page = readFileSync(path.join(DIR, "review.html"), "utf8");
-  const takes = {}, edited = new Map(), retime = new Set();
+  const takes = {}, edited = new Map(), retime = new Set(), patched = [];
+  // the line takes waiting for keep or drop, by "part.line", and the last take number made of each line
+  const pending = {}, made = {};
+  const partOf = (index) => {
+    const p = state.parts.find((x) => x.index === index);
+    if (!p) throw new PartsError("BAD_ARGS", `no part ${index}`);
+    return p;
+  };
+  // a part's lines with their times in its voice (null: an interview part, or a voice made in one TTS call before
+  // parts were voiced line by line: whole-part re-takes only)
+  const linesIn = (p) => {
+    const f = files(p);
+    if (existsSync(f.turns) || !existsSync(f.lines)) return null;
+    const lines = JSON.parse(readFileSync(f.lines, "utf8"));
+    return lines.every((l) => p.text.slice(l.from, l.to) === l.text) ? lines : null;
+  };
+  const lineOf = (index, k) => {
+    const l = linesIn(partOf(index))?.[k - 1];
+    if (!l) throw new PartsError("BAD_ARGS", `part ${index} has no line ${k} to re-take: re-take the whole part`);
+    return l;
+  };
   let queue = Promise.resolve();
+  const serial = (job) => {
+    const run = queue.then(job);
+    queue = run.catch(() => {});
+    return run;
+  };
 
   const view = () => ({
     ui: flags.ui === "en" ? "en" : "vi", seconds: voices.seconds,
     parts: state.parts.map((p) => {
       const v = voices.parts.find((x) => x.index === p.index);
-      return { index: p.index, text: p.text, seconds: v.seconds, take: takes[p.index] ?? 0, interview: !!v.turns };
+      return { index: p.index, text: p.text, seconds: v.seconds, take: takes[p.index] ?? 0, interview: !!v.turns,
+        lines: linesIn(p)?.map((l, i) => {
+          const c = pending[`${p.index}.${i + 1}`];
+          return { k: i + 1, text: l.text, from: l.from, to: l.to, start: l.start, end: l.end,
+            ...(c ? { pending: { take: c.take, text: c.text, start: c.start, end: c.end } } : {}) };
+        }) ?? null };
     }),
   });
 
-  // a new TTS take of one part, after writing an edited text into the part and the script
+  // a part's new text, written into the part and the script: in place when the part's text is in the script word for
+  // word; else the script becomes the parts split by --- (the same split, so nothing is re-planned). state.script
+  // follows the file, so loadState keeps these parts
+  function setText(p, text) {
+    state.script = state.script.split(p.text).length === 2 ? state.script.replace(p.text, () => text)
+      : state.parts.map((x) => (x.index === p.index ? text : x.text)).join("\n\n---\n\n") + "\n";
+    writeFileSync(flags.script, state.script);
+    edited.set(p.index, { index: p.index, from: edited.get(p.index)?.from ?? p.text, to: text });
+    Object.assign(p, { text, chars: text.length, estSeconds: +(text.length / CHARS_PER_SEC).toFixed(1) });
+    say(`part ${p.index}: text edited`);
+  }
+
+  const dropPending = (index) => { for (const key of Object.keys(pending)) if (key.startsWith(`${index}.`)) delete pending[key]; };
+
+  // a new TTS take of every line of a part, after writing an edited text into the part and the script
   async function retake(index, text) {
-    const p = state.parts.find((x) => x.index === index);
-    if (!p) throw new PartsError("BAD_ARGS", `no part ${index}`);
+    const p = partOf(index);
     text = typeof text === "string" ? text.trim() : p.text;
     if (!text) throw new PartsError("BAD_ARGS", `part ${index}: the text is empty`);
-    if (text !== p.text) {
-      // in place when the part's text is in the script word for word; else the script becomes the parts split by ---
-      // (the same split, so nothing is re-planned). state.script follows the file, so loadState keeps these parts
-      state.script = state.script.split(p.text).length === 2 ? state.script.replace(p.text, () => text)
-        : state.parts.map((x) => (x.index === index ? text : x.text)).join("\n\n---\n\n") + "\n";
-      writeFileSync(flags.script, state.script);
-      edited.set(index, { index, from: edited.get(index)?.from ?? p.text, to: text });
-      Object.assign(p, { text, chars: text.length, estSeconds: +(text.length / CHARS_PER_SEC).toFixed(1) });
-      say(`part ${index}: text edited`);
-    }
+    if (text !== p.text) setText(p, text);
     const plan = dropVoice(p, files(p), out);
     if (plan) retime.add(plan);
+    dropPending(index);
     voices = await voiceAll(ctx, flags);
     takes[index] = (takes[index] ?? 0) + 1;
     say(`part ${index}: new take ${takes[index]}`);
+  }
+
+  // a new TTS take of one line (its edited text, if any), waiting for keep or drop; the part's voice with it in its
+  // place is written beside it, for the page to play
+  async function newLineTake(index, k, text) {
+    const l = lineOf(index, k), f = files(partOf(index)), key = `${index}.${k}`;
+    text = typeof text === "string" ? text.trim().replace(/\s+/g, " ") : l.text;
+    if (!text) throw new PartsError("BAD_ARGS", `part ${index} line ${k}: the text is empty`);
+    const n = (made[key] = Math.max(made[key] ?? 0, l.take) + 1);
+    say(`part ${index}: TTS line ${k} (${text.length} chars)`);
+    const x = await voiceLine(f, k, n, text, flags);
+    pending[key] = { take: n, text, wav: x.wav, preview: x.mp3.replace(/\.mp3$/, ".preview.mp3") };
+    await previewLine(index, k);
+    say(`part ${index}: line ${k} take ${n} ready`);
+  }
+
+  // the part's current lines with a waiting take in place of line k (rebuilt when another line of it is kept)
+  async function previewLine(index, k) {
+    const p = partOf(index), c = pending[`${index}.${k}`];
+    const lines = linesIn(p).map((l, i) => (i === k - 1 ? { ...l, text: c.text, take: c.take, wav: c.wav } : l));
+    const times = await joinLines(files(p), lines, c.preview, p.tail ?? DEFAULT_TAIL);
+    Object.assign(c, { start: times[k - 1].start, end: times[k - 1].end });
+  }
+
+  // the waiting take becomes the line's: the part's voice is joined again with it, the text follows it, everything
+  // timed on the voice is redone, the other waiting takes of the part are rebuilt on the new voice
+  async function keepLine(index, k) {
+    const p = partOf(index), l = lineOf(index, k), f = files(p), key = `${index}.${k}`, c = pending[key];
+    if (!c) throw new PartsError("BAD_ARGS", `part ${index} line ${k} has no new take to keep`);
+    const lines = linesIn(p), chars = c.text.length - (l.to - l.from);
+    if (c.text !== l.text) setText(p, p.text.slice(0, l.from) + c.text + p.text.slice(l.to));
+    lines[k - 1] = { ...l, text: c.text, to: l.from + c.text.length, take: c.take };
+    for (const x of lines.slice(k)) (x.from += chars), (x.to += chars);
+    p.lines = lines.map(({ text, from, to, take }) => ({ text, from, to, take }));
+    p.tail ??= DEFAULT_TAIL;
+    writeFileSync(f.lines, JSON.stringify(await joinLines(f, p.lines, f.mp3, p.tail), null, 1) + "\n");
+    delete pending[key];
+    const plan = dropTimed(p, f);
+    if (plan) retime.add(plan);
+    voices = await voiceAll(ctx, flags);
+    for (const other of Object.keys(pending)) if (other.startsWith(`${index}.`)) await previewLine(index, Number(other.split(".")[1]));
+    takes[index] = (takes[index] ?? 0) + 1;
+    patched.push({ part: index, line: k, from: l.text, to: c.text });
+    say(`part ${index}: line ${k} replaced (take ${c.take})`);
   }
 
   return new Promise((resolve) => {
@@ -397,6 +603,7 @@ async function reviewParts(flags) {
       server.close();
       resolve({ preview: voices.preview, seconds: voices.seconds, parts: voices.parts,
         redone: Object.keys(takes).map(Number).sort((a, b) => a - b), edited: [...edited.values()],
+        ...(patched.length ? { lines: patched } : {}),
         ...(retime.size ? { retimeGestures: [...retime] } : {}) });
     };
     const json = (res, code, body) => res.writeHead(code, { "Content-Type": "application/json", "Cache-Control": "no-store" }).end(JSON.stringify(body));
@@ -406,7 +613,8 @@ async function reviewParts(flags) {
       if (tok !== token) return res.writeHead(404).end();
       // the page fetches relative URLs: it must sit at /<token>/
       if (!rest.length) return res.writeHead(302, { Location: `/${token}/` }).end();
-      const route = rest.join("/"), audio = /^audio\/(\d+)$/.exec(route), redo = /^redo\/(\d+)$/.exec(route);
+      const route = rest.join("/"), audio = /^audio\/(\d+)$/.exec(route), take = /^audio\/(\d+)\/(\d+)$/.exec(route);
+      const redo = /^redo\/(\d+)$/.exec(route), act = /^(redo|keep|drop)\/(\d+)\/(\d+)$/.exec(route);
       try {
         if (req.method === "GET" && route === "") return res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }).end(page);
         if (req.method === "GET" && route === "state") return json(res, 200, view());
@@ -415,12 +623,19 @@ async function reviewParts(flags) {
           const v = voices.parts.find((x) => x.index === Number(audio[1]));
           return v ? sendAudio(req, res, v.audio) : res.writeHead(404).end();
         }
-        if (req.method === "POST" && redo) {
+        if (req.method === "GET" && take) {
+          const c = pending[`${take[1]}.${take[2]}`];
+          return c ? sendAudio(req, res, c.preview) : res.writeHead(404).end();
+        }
+        if (req.method === "POST" && (redo || act)) {
           if (finished) throw new PartsError("BAD_ARGS", "the review is closed");
           const { text } = await readBody(req);
-          const run = queue.then(() => retake(Number(redo[1]), text));
-          queue = run.catch(() => {});
-          await run;
+          if (redo) await serial(() => retake(Number(redo[1]), text));
+          else {
+            const [, what, index, k] = act;
+            await serial(() => (what === "redo" ? newLineTake(Number(index), Number(k), text)
+              : what === "keep" ? keepLine(Number(index), Number(k)) : delete pending[`${index}.${k}`]));
+          }
           return json(res, 200, view());
         }
         if (req.method === "POST" && route === "log") {
@@ -465,7 +680,7 @@ async function runParts(flags) {
 
   for (const p of state.parts) {
     const { mp3, mp4, gestures, transcript, render, full, turns } = partFiles(p);
-    if (redo === p.index) for (const f of [mp3, mp4, full, turns]) rmSync(f, { force: true }), delete p.jobId;
+    if (redo === p.index) dropVoice(p, partFiles(p), out);
     if (existsSync(mp4)) continue;
     changed = true;
     for (let attempt = 1, waits = 0; ; ) {

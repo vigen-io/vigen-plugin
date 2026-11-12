@@ -147,7 +147,25 @@ function toVigenError(error) {
   });
 }
 
+// The server runs one TTS or image generation per account at a time; another
+// one already running (a parallel command, or the web app) is waited out
+const BUSY_WAIT_MS = 10_000;
+const BUSY_MAX_WAIT_MS = 15 * 60 * 1000;
+
 async function rpc(method, input = {}, mappings, apiKey) {
+  const started = Date.now();
+  for (;;) {
+    try {
+      return await rpcOnce(method, input, mappings, apiKey);
+    } catch (err) {
+      if (err.code !== "GENERATION_IN_PROGRESS" || Date.now() - started > BUSY_MAX_WAIT_MS) throw err;
+      process.stderr.write(`[vigen] ${method}: another generation is running on this account; waiting\n`);
+      await new Promise((resolve) => setTimeout(resolve, BUSY_WAIT_MS));
+    }
+  }
+}
+
+async function rpcOnce(method, input = {}, mappings, apiKey) {
   const key = apiKey ?? (await getApiKey()).key;
   let res;
   try {

@@ -186,7 +186,7 @@ stand-in: a lipsync is the expensive, slow step, and every gate below is cheap t
 
 | step | skill | what the format decides |
 |---|---|---|
-| 1 voice | **vigen** `parts.mjs voice` | parts split at topic turns, or at every setup change with the part's look in `looks.json` when the template has looks. **Gate:** the review page (`parts.mjs review`, vigen § 5 step 2): every part with Nghe / Tạo lại and its text editable; wait for the user's Xong. A bad read (a mispronounced name, a rushed list, a wrong tone) is re-taken there, that part only (its gesture plan comes back in `retimeGestures`) |
+| 1 voice | **vigen** `parts.mjs voice` | parts split at topic turns, or at every setup change with the part's look in `looks.json` when the template has looks. **Gate:** the review page (`parts.mjs review`, vigen § 5 step 2): every part as its lines (one TTS call each), each with Nghe / Tạo lại and its text editable; wait for the user's Xong. A bad read (a mispronounced name, a rushed list, a wrong tone) is re-taken there, that line only (its part's gesture plan comes back in `retimeGestures`); write the script with a line break wherever a piece may need redoing alone |
 | 2 looks | **image-gen** (templates with `looks.json`) | FORMAT.md § 0. **Gate:** show the looks together; save them only on a yes |
 | 3 gestures | **vigen** | the gesture plan on the confirmed voice, following the format's energy; shown to the user |
 | 4 stand-in | `scripts/standin.mjs` + **talking-head** | each part's look frame held for its voice, the presenter as a flat silhouette over the real set (`--still` keeps the frame): `<parts>/standin.mp4`. Prep it like a take: `prep.mjs videos/<slug> --video <parts>/standin.mp4 --script … --seams-from <parts>/standin.json` |

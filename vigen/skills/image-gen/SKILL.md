@@ -20,8 +20,10 @@ node <skill>/scripts/imagegen.mjs generate --prompt-file <p.txt> --out <file.png
 `auth status` shows both ways:
 
 - **Vigen credits** (`vigen`): Vigen's image generation API, on the user's Vigen account (the **vigen**
-  skill's API key). Credits are charged only once the image is made (the result says how many). A blocked or
-  failed generation costs nothing. `estimate` gives the expected credits.
+  skill's API key). The expected credits are held when the request starts and settled to what Gemini billed
+  (the result says how many). A failed request costs nothing; a blocked one (no image) costs the few tokens
+  Gemini read and thought, usually well under a credit. One image at a time per account. `estimate` gives
+  the expected credits.
 - **Their own Gemini key** (`gemini`): the image is made from their computer with Google's Gemini API, which
   bills them directly; nothing goes through Vigen. Keys come
   from https://aistudio.google.com/apikey. `auth set-gemini <key>` checks the key and saves it to

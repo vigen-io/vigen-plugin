@@ -22,14 +22,16 @@ something the CLI doesn't cover: `node vigen.mjs rpc <method> '<inputJson>' '<ma
 | `createSubscriptionCheckout` | `{ subscriptionPlanId }` | `{ payment: { checkoutUrl, ... } }`: adds the plan's credits and extends the expiry |
 
 `subscriptionTier` is `"free"` on the free plan, one job at a time. Lipsync
-costs 1 credit per second and TTS 0.0064 credits per character, both deducted
-when the work finishes. Credits expire with the plan.
+costs 1 credit per second and TTS 0.0064 credits per character, both taken
+when the request is made and refunded if it fails (a cancelled lipsync job
+included). Credits expire with the plan. One TTS or image generation runs per
+account at a time; `vigen.mjs` waits out `GENERATION_IN_PROGRESS` by itself.
 
 ## Uploads
 
 1. `createUpload` `{ type: "image" | "audio", fileName, metadata: { type: <mime>, size, originalName } }` → `{ uploadUrl, cdnUrl, asset }`
 2. `PUT uploadUrl` with header `Content-Type: <mime>` and the raw bytes
-3. `finalizeUpload` `{ assetId }` → `{ asset }` (`status: "ready"`; audio gets `duration`)
+3. `finalizeUpload` `{ assetId }` → `{ asset }` (`status: "ready"`). Audio is re-encoded on the server to a mono MP3 at a new `cdnUrl`, and gets `duration` from it (≤ 10 minutes, ≤ 200 MB uploaded)
 
 Audio over 10 minutes is rejected (`AUDIO_TOO_LONG`).
 
@@ -73,7 +75,7 @@ size: 720x1280 (portrait) or 1280x720 (landscape).
 | `cloneVoice` | `{ name, assetId, language, transcription?, description?, tags? }` | Voice `{ id, name, language, modelInfo: { model: "akiTTS", transcription, ... }, sampleAsset: null }` |
 | `listMyVoices` | `{}` | `{ voices }` (own cloned voices) |
 | `listVoices` | `{ language?, gender?, q?, limit?, startingAfter? }` | `{ voices, nextCursor? }` (public voice library) |
-| `createTtsAudio` | `{ text, voiceId, language? }` | `{ asset }`: MP3, ready for lipsync. Long text is split into sentences and merged. 0.5 credits/character once the TTS quota is used up. |
+| `createTtsAudio` | `{ text, voiceId, language? }` | `{ asset }`: MP3, ready for lipsync. Long text is split into sentences and merged. At most 10,000 characters; 0.0064 credits/character. |
 
 **Clone clip:**
 - 5–15s of clear speech from one speaker, no background music.

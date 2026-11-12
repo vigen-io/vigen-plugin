@@ -1,7 +1,7 @@
 {
   "name": "vigen",
   "displayName": "Vigen",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Talking-avatar videos with Vigen: a koi (avatar + cloned voice) lipsyncs the script, then a layered HyperFrames edit (camera, captions, cards, stock media, UI demos, sound) in a video template's style, with Gemini image generation for the koi's looks.",
   "author": {
     "name": "Vigen",

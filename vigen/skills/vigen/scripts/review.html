@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- The voice review page served by `parts.mjs review`: every part's text, its take, a new-take button. -->
+<!-- The voice review page served by `parts.mjs review`: every part as its lines (one TTS call each), each playable and re-takeable on its own. -->
 <html lang="vi">
 <head>
 <meta charset="utf-8">
@@ -31,14 +31,27 @@
   .redo.hot { background: var(--accent); color: var(--accent-text); }
   .done { background: var(--accent); color: var(--accent-text); padding: 9px 22px; font-weight: 600; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 16px; margin-bottom: 14px; }
-  .card.busy { opacity: .7; }
+  .card.busy, .sent.busy { opacity: .7; }
   .head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
   .head .name { color: var(--muted); margin-right: auto; }
   .badge { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; }
   .badge.new { color: var(--new); }
   textarea { width: 100%; border: 1px solid transparent; border-radius: 10px; background: var(--field); color: var(--text); font: inherit; line-height: 1.7; padding: 10px 14px; resize: none; overflow: hidden; field-sizing: content; }
   textarea:focus { outline: none; border-color: var(--accent); }
+  .sents { display: flex; flex-direction: column; gap: 8px; }
+  .sent .line { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: start; }
+  .sent textarea { padding: 6px 12px; }
+  .sent .line button { margin-top: 3px; padding: 6px 10px; }
+  .icon { background: var(--chip); padding: 6px 8px; }
+  .sent.kept textarea { box-shadow: inset 3px 0 0 var(--new); }
+  .take { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0 44px; padding: 8px 10px; border: 1px dashed var(--new); border-radius: 10px; }
+  .take .said { flex-basis: 100%; font-size: 14px; color: var(--muted); }
+  .take .keep { background: var(--new); color: #fff; font-weight: 600; }
+  .take .drop { color: var(--muted); }
   .note { font-size: 13px; margin-top: 6px; min-height: 0; }
+  .sent .note { margin-left: 44px; }
+  @media (max-width: 520px) { .sent .line .redo .lbl { display: none; } .take { margin-left: 0; } .sent .note { margin-left: 0; } }
+  .note:empty { display: none; }
   .note.warn { color: var(--warn); }
   .note.err { color: var(--err); }
   .note.hint { color: var(--muted); }
@@ -53,17 +66,23 @@
 <script>
 const T = {
   vi: {
-    title: "Nghe từng phần", lead: "Nghe, sửa chữ và tạo lại giọng cho từng phần. Xong thì bấm Xong để quay lại Claude.",
-    all: "Nghe tất cả", part: "Phần", play: "Nghe", stop: "Dừng", redo: "Tạo lại", busy: "Đang tạo…", done: "Xong",
-    fresh: "Bản mới", edited: "Đã sửa chữ: bấm Tạo lại để đọc lại.", interview: "Dòng bắt đầu bằng Q: là câu hỏi của người phỏng vấn.",
+    title: "Nghe từng đoạn", lead: "Nghe từng đoạn, sửa chữ và tạo lại đoạn nào đọc chưa ổn: đoạn mới chỉ được ghép vào phần khi bạn bấm Dùng đoạn này. Xong thì bấm Xong để quay lại Claude.",
+    all: "Nghe tất cả", part: "Phần", play: "Nghe", stop: "Dừng", redo: "Tạo lại", redoPart: "Tạo lại cả phần", busy: "Đang tạo…", done: "Xong",
+    fresh: "Bản mới", edited: "Đã sửa chữ: bấm Tạo lại để đọc lại.",
+    interview: "Dòng bắt đầu bằng Q: là câu hỏi của người phỏng vấn.",
+    playLine: "Nghe đoạn này", newTake: "Đoạn mới", playNew: "Nghe trong phần", keep: "Dùng đoạn này", drop: "Bỏ", splicing: "Đang ghép…",
+    said: "Đọc:", pendingLeft: (n) => `Còn ${n} đoạn mới chưa chọn Dùng hay Bỏ. Bấm Xong lần nữa để bỏ qua chúng.`,
     closedTitle: "Đã xong", closed: "Quay lại Claude để làm tiếp. Có thể đóng trang này.",
     gone: "Trang này đã đóng. Quay lại Claude để làm tiếp.", sec: "giây",
     blocked: "Trình duyệt chặn phát âm thanh. Bấm Nghe lần nữa.", noAudio: "Không phát được âm thanh",
   },
   en: {
-    title: "Listen part by part", lead: "Listen, edit the text and re-take the voice of any part. Click Done to go back to Claude.",
-    all: "Play all", part: "Part", play: "Play", stop: "Stop", redo: "Re-take", busy: "Generating…", done: "Done",
-    fresh: "New take", edited: "Text edited: click Re-take to voice it.", interview: "Lines starting with Q: are the interviewer's questions.",
+    title: "Listen line by line", lead: "Listen, edit the text and re-take any line that sounds off: the new take goes into the part only when you click Use this. Click Done to go back to Claude.",
+    all: "Play all", part: "Part", play: "Play", stop: "Stop", redo: "Re-take", redoPart: "Re-take part", busy: "Generating…", done: "Done",
+    fresh: "New take", edited: "Text edited: click Re-take to voice it.",
+    interview: "Lines starting with Q: are the interviewer's questions.",
+    playLine: "Play this line", newTake: "New take", playNew: "Play in place", keep: "Use this", drop: "Discard", splicing: "Joining…",
+    said: "Says:", pendingLeft: (n) => `${n} new take(s) not kept or discarded yet. Click Done again to discard them.`,
     closedTitle: "Done", closed: "Go back to Claude to continue. You can close this page.",
     gone: "This review is closed. Go back to Claude to continue.", sec: "s",
     blocked: "The browser blocked playback. Click Play again.", noAudio: "Couldn't play the audio",
@@ -73,46 +92,88 @@ const ICON = {
   play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4.5v15l12-7.5z"/></svg>',
   stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
   redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.3 4.9L20 16"/><path d="M20 21v-5h-5"/></svg>',
+  keep: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
 };
 const app = document.getElementById("app");
 const player = new Audio();
-let state = null, t = T.vi, playing = null, busy = null;
-const drafts = {}, errors = {}, fresh = new Set();
+// busy: the key being worked on ("2" a part, "2.1" its first line); playing: the play button's key ("all", "2",
+// "2.1", "2.1:new" the waiting take in place); stopAt: where a line's playback ends
+let state = null, t = T.vi, playing = null, stopAt = null, busy = null, warnedDone = false;
+const drafts = {}, errors = {}, fresh = new Set(), kept = new Set();
 
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const secs = (n) => `${n.toFixed(1).replace(".", t === T.vi ? "," : ".")} ${t.sec}`;
-const draft = (p) => drafts[p.index] ?? p.text;
+const partOf = (index) => state.parts.find((x) => x.index === Number(index));
+const lineOf = (key) => { const [i, k] = key.split("."); return partOf(i)?.lines?.[k - 1]; };
+const draftOf = (key, text) => drafts[key] ?? text;
+const lineChanged = (p, s) => draftOf(`${p.index}.${s.k}`, s.text).trim() !== s.text;
+// the part's text with every edited line in it: what a whole-part re-take reads
+function partText(p) {
+  if (!p.lines) return draftOf(String(p.index), p.text);
+  let text = p.text;
+  for (const s of [...p.lines].reverse()) text = text.slice(0, s.from) + draftOf(`${p.index}.${s.k}`, s.text).trim() + text.slice(s.to);
+  return text;
+}
+const partChanged = (p) => partText(p).trim() !== p.text;
+const waiting = () => state.parts.reduce((n, p) => n + (p.lines || []).filter((s) => s.pending).length, 0);
 
-function playBtn(key) {
-  const on = playing === String(key); // `playing` holds the button's data-play value, a string
-  return `<button class="play" data-play="${key}">${on ? ICON.stop : ICON.play}${on ? t.stop : t.play}</button>`;
+function playBtn(key, label = t.play, cls = "play") {
+  const on = playing === key;
+  return `<button class="${cls}" data-play="${key}" title="${label}">${on ? ICON.stop : ICON.play}${cls === "icon" ? "" : on ? t.stop : label}</button>`;
+}
+function spinOr(key, icon, label, busyLabel = t.busy) {
+  return busy === key ? `<span class="spin"></span><span class="lbl">${busyLabel}</span>` : `${icon}<span class="lbl">${label}</span>`;
+}
+
+function lineRow(p, s) {
+  const key = `${p.index}.${s.k}`, changed = lineChanged(p, s), mine = busy?.split(":")[0] === key;
+  const c = s.pending;
+  const note = errors[key] ? `<div class="note err">${esc(errors[key])}</div>` : `<div class="note warn">${changed && !c ? t.edited : ""}</div>`;
+  return `<div class="sent${mine ? " busy" : ""}${kept.has(key) ? " kept" : ""}" data-key="${key}">
+    <div class="line">
+      ${playBtn(key, t.playLine, "icon")}
+      <textarea data-text="${key}" rows="1" ${mine ? "disabled" : ""}>${esc(draftOf(key, s.text))}</textarea>
+      <button class="redo${changed ? " hot" : ""}" data-redo="${key}" title="${t.redo}" ${busy != null ? "disabled" : ""}>${spinOr(key, ICON.redo, t.redo)}</button>
+    </div>
+    ${c ? `<div class="take">
+      <span class="badge new">${t.newTake}${c.take > 1 ? " " + c.take : ""}</span>
+      ${playBtn(`${key}:new`, t.playNew)}
+      <button class="keep" data-keep="${key}" ${busy != null ? "disabled" : ""}>${spinOr(`${key}:keep`, ICON.keep, t.keep, t.splicing)}</button>
+      <button class="drop" data-drop="${key}" ${busy != null ? "disabled" : ""}>${t.drop}</button>
+      ${c.text !== s.text ? `<span class="said">${t.said} ${esc(c.text)}</span>` : ""}
+    </div>` : ""}
+    ${note}
+  </div>`;
 }
 
 function render() {
   if (!state) return;
+  const left = waiting();
   app.innerHTML = `
     <h1>${t.title}</h1>
     <p class="lead">${t.lead}</p>
     <div class="bar">
-      <button class="play" data-play="all">${playing === "all" ? ICON.stop + t.stop : ICON.play + t.all}</button>
+      ${playBtn("all", t.all)}
       <span class="total">${state.parts.length} ${t.part.toLowerCase()} · ${secs(state.seconds)}</span>
       <button class="done" data-done ${busy != null ? "disabled" : ""}>${t.done}</button>
-      ${errors.all ? `<div class="note err">${esc(errors.all)}</div>` : ""}
+      ${errors.all ? `<div class="note err">${esc(errors.all)}</div>` : warnedDone && left ? `<div class="note warn">${t.pendingLeft(left)}</div>` : ""}
     </div>
     ${state.parts.map((p) => {
-      const changed = draft(p).trim() !== p.text, mine = busy === p.index;
-      const note = errors[p.index] ? `<div class="note err">${esc(errors[p.index])}</div>`
-        : changed ? `<div class="note warn">${t.edited}</div>`
-        : p.interview ? `<div class="note hint">${t.interview}</div>` : "";
-      return `<section class="card${mine ? " busy" : ""}">
+      const key = String(p.index), changed = partChanged(p), mine = busy === key;
+      const body = p.lines ? `<div class="sents">${p.lines.map((s) => lineRow(p, s)).join("")}</div>`
+        : `<textarea data-text="${key}" rows="1" ${mine ? "disabled" : ""}>${esc(draftOf(key, p.text))}</textarea>`;
+      const note = errors[key] ? `<div class="note err">${esc(errors[key])}</div>`
+        : changed && !p.lines ? `<div class="note warn">${t.edited}</div>`
+        : p.interview ? `<div class="note hint">${t.interview}</div>` : `<div class="note"></div>`;
+      return `<section class="card${mine ? " busy" : ""}" data-part="${key}">
         <div class="head">
           <span class="name">${t.part} ${p.index} · ${secs(p.seconds)}</span>
           ${fresh.has(p.index) ? `<span class="badge new">${t.fresh}${p.take > 1 ? " " + p.take : ""}</span>` : ""}
-          ${playBtn(p.index)}
-          <button class="redo${changed ? " hot" : ""}" data-redo="${p.index}" ${busy != null ? "disabled" : ""}>
-            ${mine ? '<span class="spin"></span>' + t.busy : ICON.redo + t.redo}</button>
+          ${playBtn(key)}
+          <button class="redo part${changed ? " hot" : ""}" data-redo="${key}" ${busy != null ? "disabled" : ""}>
+            ${spinOr(key, ICON.redo, p.lines ? t.redoPart : t.redo)}</button>
         </div>
-        <textarea data-text="${p.index}" rows="1" ${mine ? "disabled" : ""}>${esc(draft(p))}</textarea>
+        ${body}
         ${note}
       </section>`;
     }).join("")}`;
@@ -125,50 +186,101 @@ const autoSize = CSS.supports?.("field-sizing", "content");
 function fit(el) { if (autoSize) return; el.style.height = "auto"; el.style.height = el.scrollHeight + 2 + "px"; }
 addEventListener("resize", () => app.querySelectorAll("textarea").forEach(fit));
 
-function stop() { player.pause(); playing = null; }
+function stop() { player.pause(); playing = null; stopAt = null; }
+
+// what a play button plays: a part, all parts, one line of a part, or a waiting take in place (with a second of
+// the voice around it, so the joins can be heard)
+function source(key) {
+  if (key === "all") return { url: `audio/all?v=${Date.now()}` };
+  const p = partOf(key.split(".")[0]);
+  if (!key.includes(".")) return { url: `audio/${p.index}?take=${p.take}` };
+  const s = lineOf(key.replace(":new", ""));
+  if (key.endsWith(":new")) {
+    const c = s.pending;
+    return { url: `audio/${p.index}/${s.k}?take=${c.take}`, from: Math.max(0, c.start - 1), to: c.end + 0.8 };
+  }
+  // never past halfway into the pause on either side
+  const prev = p.lines[s.k - 2], next = p.lines[s.k];
+  return { url: `audio/${p.index}?take=${p.take}`, from: Math.max(prev ? (prev.end + s.start) / 2 : 0, s.start - 0.05),
+    to: next ? Math.min((s.end + next.start) / 2, s.end + 0.2) : s.end + 0.3 };
+}
 
 function play(key) {
   if (playing === key) { stop(); return render(); }
-  const p = key === "all" ? null : state.parts.find((x) => x.index === Number(key));
-  player.src = key === "all" ? `audio/all?v=${Date.now()}` : `audio/${key}?take=${p.take}`;
-  player.currentTime = 0;
+  const { url, from, to } = source(key);
+  // a media fragment starts the player at the line and pauses it at its end (stopAt is the fallback)
+  player.src = from != null ? `${url}#t=${from.toFixed(2)},${to.toFixed(2)}` : url;
+  if (from == null) player.currentTime = 0;
   playing = key;
-  delete errors[key];
+  stopAt = to ?? null;
+  delete errors[key.split(":")[0]];
   // a failed play is shown on the page and reported to the terminal, so Claude can see why it stayed silent
   player.play().catch((e) => {
     if (playing !== key) return; // stopped or replaced by another play
     playing = null;
-    errors[key] = e.name === "NotAllowedError" ? t.blocked : `${t.noAudio} (${e.name}: ${e.message})`;
+    errors[key.split(":")[0]] = e.name === "NotAllowedError" ? t.blocked : `${t.noAudio} (${e.name}: ${e.message})`;
     fetch("log", { method: "POST", body: JSON.stringify({ message: `play ${key} failed: ${e.name}: ${e.message}` }) }).catch(() => {});
     render();
   });
   render();
 }
-player.addEventListener("ended", () => { playing = null; render(); });
+const ended = () => { playing = null; stopAt = null; render(); };
+player.addEventListener("ended", ended);
+player.addEventListener("pause", () => { if (playing && stopAt != null && player.currentTime >= stopAt - 0.15) ended(); });
+// a range stops on time: checked every frame (timeupdate comes only every ~250 ms, long enough to hear the next word)
+(function watch() {
+  if (playing && stopAt != null && !player.paused && player.currentTime >= stopAt) { player.pause(); ended(); }
+  requestAnimationFrame(watch);
+})();
 
-async function redo(index) {
-  const p = state.parts.find((x) => x.index === index);
+// one request to the review server at a time: busy shows on `key`, the new state comes back
+async function send(route, key, body, after) {
   stop();
-  busy = index;
-  delete errors[index];
+  busy = key;
+  const errKey = key.split(":")[0];
+  delete errors[errKey];
   render();
   try {
-    const r = await fetch(`redo/${index}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: draft(p) }) });
-    const body = await r.json();
-    if (body.error) throw new Error(body.error.message);
-    state = body;
-    delete drafts[index];
-    fresh.add(index);
+    const r = await fetch(route, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+    const next = await r.json();
+    if (next.error) throw new Error(next.error.message);
+    state = next;
     busy = null;
-    play(String(index));
+    after?.();
+    render();
   } catch (e) {
-    errors[index] = e.message;
+    errors[errKey] = e.message;
     busy = null;
     render();
   }
 }
 
+function redo(key) {
+  if (!key.includes(".")) {
+    const p = partOf(key);
+    return send(`redo/${key}`, key, { text: partText(p) }, () => {
+      for (const d of Object.keys(drafts)) if (d === key || d.startsWith(key + ".")) delete drafts[d];
+      for (const d of [...kept]) if (d.startsWith(key + ".")) kept.delete(d);
+      fresh.add(p.index);
+      play(key);
+    });
+  }
+  const s = lineOf(key), [i, k] = key.split(".");
+  return send(`redo/${i}/${k}`, key, { text: draftOf(key, s.text) }, () => { delete drafts[key]; play(`${key}:new`); });
+}
+
+function keep(key) {
+  const [i, k] = key.split(".");
+  return send(`keep/${i}/${k}`, `${key}:keep`, null, () => { kept.add(key); fresh.add(Number(i)); });
+}
+
+function drop(key) {
+  const [i, k] = key.split(".");
+  return send(`drop/${i}/${k}`, `${key}:drop`, null);
+}
+
 async function done() {
+  if (waiting() && !warnedDone) { warnedDone = true; return render(); }
   stop();
   try { await fetch("done", { method: "POST" }); } catch {}
   state = null;
@@ -179,24 +291,32 @@ app.addEventListener("click", (e) => {
   const el = e.target.closest("button");
   if (!el || el.disabled) return;
   if (el.dataset.play) play(el.dataset.play);
-  else if (el.dataset.redo) redo(Number(el.dataset.redo));
+  else if (el.dataset.redo) redo(el.dataset.redo);
+  else if (el.dataset.keep) keep(el.dataset.keep);
+  else if (el.dataset.drop) drop(el.dataset.drop);
   else if ("done" in el.dataset) done();
 });
 app.addEventListener("input", (e) => {
-  const el = e.target;
-  if (!el.dataset.text) return;
-  const index = Number(el.dataset.text);
-  drafts[index] = el.value;
+  const el = e.target, key = el.dataset.text;
+  if (!key) return;
+  drafts[key] = el.value;
   fit(el);
-  // the warning and the button's emphasis follow the edit without re-rendering the field being typed in
-  const p = state.parts.find((x) => x.index === index), changed = el.value.trim() !== p.text;
-  const card = el.closest(".card");
-  card.querySelector(".redo").classList.toggle("hot", changed);
-  let note = card.querySelector(".note");
-  if (changed && !note) { note = document.createElement("div"); card.append(note); }
-  if (note && !errors[index]) {
-    note.className = changed ? "note warn" : p.interview ? "note hint" : "note";
-    note.textContent = changed ? t.edited : p.interview ? t.interview : "";
+  // the warnings and the buttons' emphasis follow the edit without re-rendering the field being typed in
+  const card = el.closest(".card"), p = partOf(card.dataset.part);
+  card.querySelector(".redo.part").classList.toggle("hot", partChanged(p));
+  const row = el.closest(".sent");
+  if (row) {
+    const changed = lineChanged(p, lineOf(key));
+    row.querySelector(".redo").classList.toggle("hot", changed);
+    const note = row.querySelector(".note");
+    if (!errors[key] && !lineOf(key).pending) note.textContent = changed ? t.edited : "";
+  } else {
+    const note = card.querySelector(":scope > .note");
+    if (note && !errors[key]) {
+      const changed = partChanged(p);
+      note.className = changed ? "note warn" : p.interview ? "note hint" : "note";
+      note.textContent = changed ? t.edited : p.interview ? t.interview : "";
+    }
   }
 });
 

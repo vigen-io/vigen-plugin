@@ -18,10 +18,11 @@ Web links: plans `https://vigen.io/subscription` · billing
 | `NO_API_KEY` | Chưa có API key Vigen. | No Vigen API key yet. | Show the API key guide in SKILL.md, then `auth set`. |
 | `INVALID_API_KEY` | API key không hợp lệ hoặc đã bị thu hồi. | The API key is invalid or revoked. | Ask for a new key from https://vigen.io/api-keys (it is shown only once when created), then `auth set`. |
 | `SUBSCRIPTION_REQUIRED` | Tính năng này chỉ dành cho người dùng có gói premium. Vui lòng đăng ký gói để tiếp tục. | This feature is only available for premium users. Please subscribe to continue. | Send https://vigen.io/subscription. On the free plan, uploading lipsync audio also fails once the free lipsync minutes are used up. Without a plan, suggest `lipsync --audio <file>` if they only lack TTS. |
-| `INSUFFICIENT_CREDITS` | Bạn không đủ credits để thực hiện tác vụ này. Mua thêm credits để tiếp tục. | You don't have enough credits to perform this action. Purchase more credits to continue. | The message includes how many are needed and how many are left (1 second of lipsync = 1 credit, 1 TTS character = 0.0064 credits; lipsync jobs still running hold their credits). Run `checkout credits` and give the `checkoutUrl` (one pack: +10,000 credits for 30,000 VND). Alternatives: shorter text, or `--audio` with their own recording. |
+| `INSUFFICIENT_CREDITS` | Bạn không đủ credits để thực hiện tác vụ này. Mua thêm credits để tiếp tục. | You don't have enough credits to perform this action. Purchase more credits to continue. | The message includes how many are needed and how many are left (1 second of lipsync = 1 credit, 1 TTS character = 0.0064 credits; credits are taken when a job or request starts and come back if it fails or is cancelled). Run `checkout credits` and give the `checkoutUrl` (one pack: +10,000 credits for 30,000 VND). Alternatives: shorter text, or `--audio` with their own recording. |
+| `ACCOUNT_DISABLED` | Tài khoản này đã bị vô hiệu hoá. | This account has been disabled. | Email/password accounts are only valid when made by Vigen's agent. Ask them to sign in on https://vigen.io with Google and create a key there, then `auth set`. |
 | `PAYMENT_MAINTENANCE` | Thanh toán đang bảo trì, vui lòng quay lại sau. | Payments are under maintenance, please come back later. | No checkout link is possible right now. Say so, point to https://vigen.io/billing for later, and offer the alternatives above. |
 
-## Lipsync limits
+## Limits
 
 | code | vi | en | fix |
 |---|---|---|---|
@@ -31,7 +32,12 @@ Web links: plans `https://vigen.io/subscription` · billing
 | `INVALID_PROMPT` | Prompt không hợp lệ. | The prompt template is invalid. | The message says why: missing `{{text}}`, a variable other than `{{text}}`/`{{language}}`, or over 6000 characters. Fix the template (see prompting.md). `vigen.mjs` checks this before spending TTS credits. |
 | `INVALID_INSTRUCTIONS` | Chỉ dẫn theo thời điểm không hợp lệ. | A timed instruction is invalid. | The message names the item and the problem (no instruction, neither a timestamp nor a start and end, a time outside the audio, over 1000 characters). Fix the plan; see directing.md. |
 | `INVALID_SEED` | Seed không hợp lệ. | The seed is invalid. | Use a whole number from 0 to 2147483647. |
+| `TEXT_TOO_LONG` | Văn bản quá dài. | The text is too long. | One TTS call takes at most 10,000 characters (about 10 minutes of speech). Split the script into parts (`parts.mjs` does). |
+| `AUDIO_TOO_LARGE` | Tệp âm thanh quá lớn. | The audio file is too large. | Over 200 MB. Re-encode it to MP3 (`ffmpeg -i in -ac 1 -q:a 2 out.mp3`) and upload that. |
 | `AUDIO_TOO_LONG` | Âm thanh không được dài quá 10 phút. Vui lòng chọn file ngắn hơn. | Audio must not exceed 10 minutes. Please choose a shorter file. | Split it into several videos of 10 minutes or less. |
+| `GENERATION_IN_PROGRESS` | Bạn đang có một yêu cầu tạo giọng nói hoặc ảnh khác. | Another voice or image generation is running on this account. | One TTS or image generation runs per account at a time. `vigen.mjs` waits up to 15 minutes by itself; seeing this means something else (the web app, another session) has held it that long. Run generations one after another. |
+| `RATE_LIMITED` | Bạn đã dùng quá nhiều lần, vui lòng thử lại sau. | Too many requests, please try again later. | `cloneVoice` (10/hour), `isolateVoice` (30/hour) and `transcribeAudio` (300/hour) are free but capped per account. The message says how many minutes to wait. |
+| `AVATAR_IN_USE` | Avatar đang có video đang được tạo. | This avatar has a video still being made. | An avatar can't be deleted while one of its jobs is unfinished. Wait for it, or cancel it, then delete. |
 
 ## Template handoff
 

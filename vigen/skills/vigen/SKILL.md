@@ -278,19 +278,31 @@ whole video. For anything longer than one short paragraph, lipsync in parts of ~
    (400 ≈ 20–25 s of Vietnamese) changes the size.
 2. `node <skill-dir>/scripts/parts.mjs voice --koi <koiDir> --script <script.txt> --out <dir>` makes each
    part's voice (`part-NN.mp3`) and its timed phrases (`part-NN.timeline.json`) before any lipsync.
+   A part is voiced **line by line**: split the way Vigen's TTS splits any text (every line break of the script is
+   its own line; within a script line, sentences are packed into lines of up to 200 characters, and a sentence over
+   200 is cut at a comma), each line one TTS call, joined with the TTS's own 300 ms pause, so it sounds as one call
+   of the whole part would. The takes are in `<dir>/lines/`, each line's time in `part-NN.lines.json`. A line is
+   also what the user re-takes on its own in the review, so **when writing the script, put a line break wherever the
+   user may want to redo a piece alone**: after most sentences, and in a long sentence at a comma where a short
+   pause sounds natural (each line break is a 300 ms pause in the voice: never in the middle of a phrase).
    Every part's voice ends on 0.4 s of silence (`--tail` to change it): TTS stops on the last syllable, and
    without it each cut lands the instant the word ends.
    **Let the user listen before going on, on the review page:**
    `node <skill-dir>/scripts/parts.mjs review --koi <koiDir> --script <script.txt> --out <dir> [--ui en]`, run in
    the background (it serves until the user is done). It prints the page's URL on stderr: open it for the user
    (in the Claude desktop app, in its preview/browser pane; otherwise add `--open` for their default browser) and
-   give them the link too. The page lists every part with its text, a **Nghe** (play) button and a **Tạo lại**
-   (re-take) button, plus *Nghe tất cả* (all parts back to back). The user can fix a part's text in place (a
-   name spelled the way it should sound) and re-take it; the edit is written into the script. `--ui en` for a
-   user who doesn't speak Vietnamese. Each re-take costs that part's TTS.
-   When the user clicks **Xong**, the command exits with `{ preview, parts, redone, edited, retimeGestures }`:
+   give them the link too. The page lists every part as its lines, each with a play button, its text and
+   **Tạo lại**, plus *Nghe* / *Tạo lại cả phần* per part and *Nghe tất cả* (all parts back to back). A line's
+   Tạo lại voices that line again and offers it in place (*Nghe trong phần* plays it with a second of the part
+   around it); only **Dùng đoạn này** joins it into the part's voice, the other lines' takes untouched. The user
+   can fix a line's text in place (a name spelled the way it should sound) and re-take it; the edit is written into
+   the script. `--ui en` for a user who doesn't speak Vietnamese. A line re-take costs that line's TTS, a part
+   re-take every line's.
+   When the user clicks **Xong**, the command exits with `{ preview, parts, redone, edited, lines, retimeGestures }`:
    read it, re-time the plans in `retimeGestures`, and take `edited` into account (the script and those parts'
-   words changed). If the user says in chat that they're done instead, stop the command (it prints the same
+   words changed); `lines` lists the line takes kept (`{ part, line, from, to }`), whose parts are also in
+   `redone`. An interview part, or a part voiced in one TTS call by an older version, shows as one text with
+   whole-part re-takes only (a whole-part re-take voices it line by line). If the user says in chat that they're done instead, stop the command (it prints the same
    result) and carry on; everything is already saved in `<dir>`. Where no page can be shown, give them
    `<dir>/voice-preview.mp3` and redo a bad part with `parts.mjs voice … --redo N[,M]` (same result fields).
    TTS is cheap; a lipsync of a bad voice is not. With the video-format skill, the edit is also previewed on a
