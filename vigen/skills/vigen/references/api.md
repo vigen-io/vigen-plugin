@@ -73,9 +73,13 @@ size: 720x1280 (portrait) or 1280x720 (landscape).
 | `isolateVoice` | `{ assetId }` | `{ asset }`: new MP3 asset with background music/noise removed. Send ≤30s. |
 | `transcribeAudio` | `{ assetId, language? }` | `{ text }`. Omit `language` to auto-detect. |
 | `cloneVoice` | `{ name, assetId, language, transcription?, description?, tags? }` | Voice `{ id, name, language, modelInfo: { model: "akiTTS", transcription, ... }, sampleAsset: null }` |
-| `listMyVoices` | `{}` | `{ voices }` (own cloned voices) |
+| `listMyVoices` | `{ q?, tags?, language?, gender?, limit?, startingAfter? }` | `{ voices, nextCursor? }` (own cloned voices, newest first; all matches unless `limit` is set) |
+| `updateVoice` | `{ voiceId, name?, description?, tags? }` | the updated voice |
+| `deleteVoice` | `{ voiceId }` | `{ success }` |
 | `listVoices` | `{ language?, gender?, q?, limit?, startingAfter? }` | `{ voices, nextCursor? }` (public voice library) |
 | `createTtsAudio` | `{ text, voiceId, language? }` | `{ asset }`: MP3, ready for lipsync. Long text is split into sentences and merged. At most 10,000 characters; 0.0064 credits/character. |
+| `createTtsBlocks` | `{ texts, voiceId, language?, regenerate? }` | `{ assets }`: one MP3 per text, in order, rendered side by side in one request. Charged like `createTtsAudio` for all the texts' characters (at most 10,000, at most 500 texts). `regenerate: true` makes a new take of a text voiced before; without it the server returns its cached clip of the same text and voice. |
+| `joinTtsAudio` | `{ assetIds }` | `{ asset }`: your TTS assets joined in order with the TTS's 300 ms pause, one MP3 ready for lipsync. Free; at most 10 minutes. |
 
 **Clone clip:**
 - 5–15s of clear speech from one speaker, no background music.

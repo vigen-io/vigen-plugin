@@ -212,7 +212,8 @@ async function interviewVoice(p, f, flags, state) {
     const raw = path.join(dir, `${id}-t${k + 1}-${t.speaker}.mp3`), wav = raw.replace(/\.mp3$/, ".wav");
     if (!existsSync(raw)) {
       say(`part ${p.index}: TTS turn ${k + 1} (${t.speaker === "q" ? "interviewer" : "koi"}, ${t.text.length} chars)`);
-      await vigen("tts", "--koi", t.speaker === "q" ? interviewer : flags.koi, "--text", t.text, "--out", raw, ...(flags.language ? ["--language", flags.language] : []));
+      await vigen("tts", "--koi", t.speaker === "q" ? interviewer : flags.koi, "--text", t.text, "--out", raw, ...(flags.language ? ["--language", flags.language] : []),
+        ...(p.fresh ? ["--regenerate"] : []));
     }
     // two cloned voices come out at different levels (one interviewer read 8 dB under the koi): every turn is
     // levelled, the off-screen question 2 dB under the answer
@@ -266,6 +267,7 @@ async function trailingSilence(file) {
 async function voiceOf(p, f, flags, state) {
   if (!existsSync(f.mp3) && isInterview(p.text)) await interviewVoice(p, f, flags, state);
   if (!existsSync(f.mp3)) await voiceLines(p, f, flags);
+  delete p.fresh;
   if (p.tail == null) {
     const want = flags.tail != null ? Number(flags.tail) : DEFAULT_TAIL;
     const have = await trailingSilence(f.mp3);
@@ -287,7 +289,8 @@ function dropTimed(p, f) {
   return existsSync(f.gestures) ? f.gestures : null;
 }
 
-// A part's voice and everything timed on it are dropped, so the next voiceOf makes a new TTS take
+// A part's voice and everything timed on it are dropped, so the next voiceOf makes a new TTS take (`fresh`: not the
+// server's cached clips of the same text)
 function dropVoice(p, f, out) {
   for (const x of [f.mp3, f.full, f.turns, f.lines]) rmSync(x, { force: true });
   // this part's voiced turns and lines too, so it gets a new take of every one
@@ -297,12 +300,14 @@ function dropVoice(p, f, out) {
   }
   delete p.tail;
   delete p.lines;
+  p.fresh = true;
   return dropTimed(p, f);
 }
 
-// A part's lines, each voiced by its own TTS call and re-takeable on its own: the server's TTS split
-// (packages/server/src/utils/split.ts, lucyai's "auto" mode), which voices every block of a text on its own and joins
-// them with 300 ms pauses, so the joined lines sound as one TTS call of the whole part does. Every line break makes
+// A part's lines, each its own TTS block and re-takeable on its own: the server's TTS split
+// (packages/rpc/src/split.ts, lucyai's "auto" mode; the web app's create page shows the same blocks), which voices
+// every block of a text on its own and joins them with 300 ms pauses, so the joined lines sound as one TTS call of
+// the whole part does. Every line break makes
 // its own block (how a script asks for a line to stand alone); within a line, sentences (split at ".") are packed
 // into blocks of up to 200 chars, and a sentence over 200 is cut at its last comma within 200. Run on a copy where
 // "3." / ",." / ".." are masked the way the server rewrites them (no split there), so every block is { text, from,
@@ -363,12 +368,18 @@ function lineTake(f, k, take) {
   return { mp3, wav: mp3.replace(/\.mp3$/, ".wav") };
 }
 
+// The take trimmed to its sound, as joinLines wants it
+async function trimTake(x) {
+  await ffmpeg(["-i", x.mp3, "-af", `${TRIM},areverse,${TRIM},areverse,aformat=sample_fmts=s16:sample_rates=48000:channel_layouts=mono`, x.wav]);
+  return x;
+}
+
+// A re-take of one line: always a new take (--regenerate), never the server's cached clip of the same text
 async function voiceLine(f, k, take, text, flags) {
   const x = lineTake(f, k, take);
   mkdirSync(path.dirname(x.mp3), { recursive: true });
-  await vigen("tts", "--koi", flags.koi, "--text", text, "--out", x.mp3, ...(flags.language ? ["--language", flags.language] : []));
-  await ffmpeg(["-i", x.mp3, "-af", `${TRIM},areverse,${TRIM},areverse,aformat=sample_fmts=s16:sample_rates=48000:channel_layouts=mono`, x.wav]);
-  return x;
+  await vigen("tts", "--koi", flags.koi, "--text", text, "--out", x.mp3, "--regenerate", ...(flags.language ? ["--language", flags.language] : []));
+  return trimTake(x);
 }
 
 // A part's voice from its line takes: each line, a 300 ms pause (the server's, counting the 20 ms of quiet each
@@ -389,15 +400,25 @@ async function joinLines(f, lines, dest, tail) {
   });
 }
 
-// A part's voice line by line: every line without a take is voiced (one TTS call each, one at a time: the account
-// runs one TTS at a time), then all joined into part-NN.mp3 and their times written to part-NN.lines.json
+// A part's voice line by line: every line without a take is voiced, all in one TTS request (a file per line, the
+// server renders them side by side), then all joined into part-NN.mp3 and their times written to part-NN.lines.json
 async function voiceLines(p, f, flags) {
   const lines = linesOf(p);
+  const todo = [];
   for (const [i, l] of lines.entries()) {
     if (l.take && existsSync(lineTake(f, i + 1, l.take).wav)) continue;
-    say(`part ${p.index}: TTS line ${i + 1}/${lines.length} (${l.text.length} chars)`);
     l.take = (l.take || 0) + 1;
-    await voiceLine(f, i + 1, l.take, l.text, flags);
+    todo.push({ text: l.text, ...lineTake(f, i + 1, l.take) });
+  }
+  if (todo.length) {
+    const chars = todo.reduce((n, x) => n + x.text.length, 0);
+    say(`part ${p.index}: TTS ${todo.length}/${lines.length} lines (${chars} chars)${p.fresh ? ", new takes" : ""}`);
+    const list = path.join(path.dirname(todo[0].mp3), `${path.basename(f.mp3, ".mp3")}-blocks.json`);
+    mkdirSync(path.dirname(list), { recursive: true });
+    writeFileSync(list, JSON.stringify(todo.map((x) => ({ text: x.text, out: x.mp3 }))));
+    await vigen("tts", "--koi", flags.koi, "--blocks", list, ...(flags.language ? ["--language", flags.language] : []), ...(p.fresh ? ["--regenerate"] : []));
+    rmSync(list, { force: true });
+    for (const x of todo) await trimTake(x);
   }
   p.lines = lines.map(({ text, from, to, take }) => ({ text, from, to, take }));
   p.tail = flags.tail != null ? Number(flags.tail) : DEFAULT_TAIL;

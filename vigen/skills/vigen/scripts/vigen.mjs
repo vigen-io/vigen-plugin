@@ -24,8 +24,11 @@
 //   node vigen.mjs lipsync --koi <koiDir> --plan <plan.json> [--seed N] [--no-wait]
 //     (segmented video: see references/directing.md for the plan format)
 //   node vigen.mjs timeline <audioFile> [--language xx]
-//   node vigen.mjs tts --koi <koiDir> --text T --out <file.mp3> [--language xx]
-//     (the koi's voice only: time gestures on it, then lipsync with --audio)
+//   node vigen.mjs tts --koi <koiDir> --text T --out <file.mp3> [--language xx] [--regenerate]
+//   node vigen.mjs tts --koi <koiDir> --blocks <blocks.json> [--language xx] [--regenerate]
+//     (the koi's voice only: time gestures on it, then lipsync with --audio. --blocks voices
+//     [{ "text", "out" }, …] in one request, a file per block; --regenerate is a new take of a text
+//     voiced before, instead of the server's cached one)
 //     (without --prompt/--prompt-file, <koiDir>/prompt.txt is used if present,
 //     else Vigen's default prompt)
 //   node vigen.mjs handoff <handoffId> [--dir vigen-koi]
@@ -163,6 +166,18 @@ async function rpc(method, input = {}, mappings, apiKey) {
       await new Promise((resolve) => setTimeout(resolve, BUSY_WAIT_MS));
     }
   }
+}
+
+// Texts voiced in one request (createTtsBlocks), an MP3 asset each, in order. `regenerate`: a new take, not the
+// server's cached clip of the same text
+async function ttsBlocks(koi, texts, { language, regenerate } = {}) {
+  const { assets } = await rpc("createTtsBlocks", {
+    texts,
+    voiceId: koi.voice.id,
+    ...(language ? { language } : {}),
+    ...(regenerate ? { regenerate: true } : {}),
+  });
+  return assets;
 }
 
 async function rpcOnce(method, input = {}, mappings, apiKey) {
@@ -820,16 +835,15 @@ async function audioFromPlan(plan, koi, flags, tmp, planDir) {
     timed = segments.map((s) => ({ ...s }));
   } else {
     if (!koi.voice?.id) throw new VigenError("KOI_INCOMPLETE", "This koi has no voice");
+    segments.forEach((segment, i) => {
+      if (!segment.text?.trim()) throw new VigenError("BAD_PLAN", `segments[${i}] has no text`);
+    });
+    // every segment in one request, a clip each
+    const assets = await ttsBlocks(koi, segments.map((s) => s.text), { language: flags.language || plan.language });
     const clips = [];
     for (const [i, segment] of segments.entries()) {
-      if (!segment.text?.trim()) throw new VigenError("BAD_PLAN", `segments[${i}] has no text`);
-      const { asset } = await rpc("createTtsAudio", {
-        text: segment.text,
-        voiceId: koi.voice.id,
-        ...(flags.language || plan.language ? { language: flags.language || plan.language } : {}),
-      });
       const mp3 = path.join(tmp, `segment-${i}.mp3`);
-      await download(asset.cdnUrl, mp3);
+      await download(assets[i].cdnUrl, mp3);
       // Decoded WAV lengths are exact; MP3 durations include encoder padding,
       // which would drift the timeline over many segments.
       const file = path.join(tmp, `segment-${i}.wav`);
@@ -1090,15 +1104,32 @@ async function main() {
       return lipsync(flags);
     case "tts": {
       const koiDir = need(flags, "koi");
-      const out = need(flags, "out");
-      if (typeof flags.text !== "string") throw new VigenError("BAD_ARGS", 'tts --koi <koiDir> --text "…" --out <file.mp3>');
+      const usage = 'tts --koi <koiDir> (--text "…" --out <file.mp3> | --blocks <blocks.json>) [--regenerate]';
       const koi = await readKoi(koiDir);
       if (!koi.voice?.id) throw new VigenError("KOI_INCOMPLETE", "This koi has no voice", { koiDir });
-      const { asset } = await rpc("createTtsAudio", {
-        text: flags.text,
-        voiceId: koi.voice.id,
-        ...(flags.language ? { language: flags.language } : {}),
-      });
+      if (typeof flags.blocks === "string") {
+        const blocks = JSON.parse(await fs.readFile(flags.blocks, "utf8"));
+        if (!Array.isArray(blocks) || !blocks.length || blocks.some((b) => typeof b?.text !== "string" || !b.text.trim() || typeof b.out !== "string")) {
+          throw new VigenError("BAD_ARGS", `${usage}: blocks.json is [{ "text", "out" }, …]`);
+        }
+        const assets = await ttsBlocks(koi, blocks.map((b) => b.text), flags);
+        const results = [];
+        for (const [i, b] of blocks.entries()) {
+          await fs.mkdir(path.dirname(path.resolve(b.out)), { recursive: true });
+          await download(assets[i].cdnUrl, b.out);
+          results.push({ out: b.out, duration: await probeDuration(b.out), chars: b.text.length });
+        }
+        return { blocks: results };
+      }
+      const out = need(flags, "out");
+      if (typeof flags.text !== "string") throw new VigenError("BAD_ARGS", usage);
+      const asset = flags.regenerate
+        ? (await ttsBlocks(koi, [flags.text], flags))[0]
+        : (await rpc("createTtsAudio", {
+            text: flags.text,
+            voiceId: koi.voice.id,
+            ...(flags.language ? { language: flags.language } : {}),
+          })).asset;
       await fs.mkdir(path.dirname(path.resolve(out)), { recursive: true });
       await download(asset.cdnUrl, out);
       return { out, duration: await probeDuration(out), chars: flags.text.length };

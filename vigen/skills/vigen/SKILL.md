@@ -280,8 +280,9 @@ whole video. For anything longer than one short paragraph, lipsync in parts of ~
    part's voice (`part-NN.mp3`) and its timed phrases (`part-NN.timeline.json`) before any lipsync.
    A part is voiced **line by line**: split the way Vigen's TTS splits any text (every line break of the script is
    its own line; within a script line, sentences are packed into lines of up to 200 characters, and a sentence over
-   200 is cut at a comma), each line one TTS call, joined with the TTS's own 300 ms pause, so it sounds as one call
-   of the whole part would. The takes are in `<dir>/lines/`, each line's time in `part-NN.lines.json`. A line is
+   200 is cut at a comma), all of a part's lines in one TTS request with a file per line (the same blocks the web
+   app's create page shows), joined with the TTS's own 300 ms pause, so it sounds as one call of the whole part
+   would. The takes are in `<dir>/lines/`, each line's time in `part-NN.lines.json`. A line is
    also what the user re-takes on its own in the review, so **when writing the script, put a line break wherever the
    user may want to redo a piece alone**: after most sentences, and in a long sentence at a comma where a short
    pause sounds natural (each line break is a 300 ms pause in the voice: never in the middle of a phrase).
@@ -381,7 +382,10 @@ part. A look's frame needs what a koi frame needs (one person, face and mouth fu
 
 - `vigen.mjs timeline <audio> [--language xx]`: timed phrases of a recording
 - `vigen.mjs tts --koi <koiDir> --text "…" --out <file.mp3> [--language xx]`:
-  the koi's voice only, no lipsync (same TTS cost as a lipsync from text)
+  the koi's voice only, no lipsync (same TTS cost as a lipsync from text).
+  `--blocks <blocks.json>` (`[{ "text", "out" }, …]`) voices many texts in one
+  request, a file each. Voicing the same text again returns the server's
+  cached take: add `--regenerate` for a new one (a re-take of a bad read).
 - `vigen.mjs koi show <koiDir>`
 - `vigen.mjs koi set-avatar <koiDir> [--frame <photo>]`: rebuilds the avatar,
   e.g. after `AVATAR_OUTDATED`. Without `--frame` it reuses the saved frame.

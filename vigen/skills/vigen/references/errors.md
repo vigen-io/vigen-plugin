@@ -33,6 +33,7 @@ Web links: plans `https://vigen.io/subscription` · billing
 | `INVALID_INSTRUCTIONS` | Chỉ dẫn theo thời điểm không hợp lệ. | A timed instruction is invalid. | The message names the item and the problem (no instruction, neither a timestamp nor a start and end, a time outside the audio, over 1000 characters). Fix the plan; see directing.md. |
 | `INVALID_SEED` | Seed không hợp lệ. | The seed is invalid. | Use a whole number from 0 to 2147483647. |
 | `TEXT_TOO_LONG` | Văn bản quá dài. | The text is too long. | One TTS call takes at most 10,000 characters (about 10 minutes of speech). Split the script into parts (`parts.mjs` does). |
+| `TOO_MANY_BLOCKS` | Quá nhiều đoạn. | Too many blocks. | One `createTtsBlocks` or `joinTtsAudio` call takes at most 500 texts or assets. Send them in several calls. |
 | `AUDIO_TOO_LARGE` | Tệp âm thanh quá lớn. | The audio file is too large. | Over 200 MB. Re-encode it to MP3 (`ffmpeg -i in -ac 1 -q:a 2 out.mp3`) and upload that. |
 | `AUDIO_TOO_LONG` | Âm thanh không được dài quá 10 phút. Vui lòng chọn file ngắn hơn. | Audio must not exceed 10 minutes. Please choose a shorter file. | Split it into several videos of 10 minutes or less. |
 | `GENERATION_IN_PROGRESS` | Bạn đang có một yêu cầu tạo giọng nói hoặc ảnh khác. | Another voice or image generation is running on this account. | One TTS or image generation runs per account at a time. `vigen.mjs` waits up to 15 minutes by itself; seeing this means something else (the web app, another session) has held it that long. Run generations one after another. |
