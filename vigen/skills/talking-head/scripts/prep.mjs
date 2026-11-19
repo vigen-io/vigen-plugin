@@ -36,7 +36,9 @@ async function main() {
   const plate = path.join(assets, "talking.mp4");
   if (!videos.length && !fs.existsSync(plate)) throw new NeedsInput("no plate yet: pass --video <talking-head clip> (several --video are joined in order).");
 
-  // the script: kept in the project, it is what captions and timings are written from
+  // the script: kept in the project, it is what captions and timings are written from. Pass the script the voice
+  // was made from, as is: its "Q:" markers and "---" part splits are skipped here, and vigen's parts.mjs re-plans
+  // (and re-pads) every part when the project's script.txt stops matching the one it voiced
   if (args.script) {
     const s = path.resolve(ROOT, args.script);
     if (!fs.existsSync(s)) throw new NeedsInput(`script ${args.script} does not exist: ask the user for it (paste or path).`);

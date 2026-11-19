@@ -44,6 +44,17 @@ The media defocuses heavily behind big type laid over it (an `over` card). For t
 `full` panel of the plate (`"src": "assets/talking.mp4"`, `"mediaStart"` = the panel's `start` so it stays in
 sync) graded to blur: the take keeps moving, out of focus, under the words. Pre-baked like B&W.
 
+## Swing in — `"in": "swing"`
+A screenshot or listing dropped onto the shot: lands from the right, tilted 9° and 1.12× large, swings past level
+and settles in 0.26 s (back.out 3). Measured from a shop listing card in the ranking-products references.
+
+## Blur backdrop — `"blur": true`
+The take, defocused (a pre-baked `soft` copy of the plate: gblur σ 14), in a box around the panel padded
+190 px left/right and 65 px top/bottom with 40 px feathered edges, shown and gone with the panel (hard cuts). It
+sits inside the camera above the presenter, so their body under the card is blurred too while the face above
+stays sharp. Pairs with `in: "white"` for a product shot flashing on (ranking-products). `grade: "blur"` for
+heavier defocus.
+
 ## Hold and breathe
 Off by default: a panel shows from its `start` to its `end` and the presenter has the frame in between.
 With `hold: true` a panel is always on screen: each holds until the next arrives, the first from 0, the last

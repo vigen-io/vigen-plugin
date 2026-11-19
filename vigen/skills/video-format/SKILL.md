@@ -47,7 +47,7 @@ say what the lipsync costs before spending credits. The one exception: a templat
    ≈ 17 characters per second of speech, English ≈ 2.5 words per second: 15 s ≈ 250 characters / 35–40
    words). Show it and get a yes before anything costs credits.
 2. **Template.** The workspace's `formats/*/` plus the built-in `<skill>/templates/*/` (koi-explainer,
-   quick-take, garden-storytime, verdict-board, tutorial, brand-building, desk-collage). When the request names one (`template: <name>`, or a handoff's
+   quick-take, garden-storytime, verdict-board, tutorial, brand-building, desk-collage, ranking-products). When the request names one (`template: <name>`, or a handoff's
    `template`), use it without asking; else offer them with the first paragraph of each FORMAT.md. Copy a
    built-in template (with its `cards/`) into `formats/<name>/` before using it. The template sets the aspect
    ratio (9:16) and the look, so don't ask about either.
@@ -59,7 +59,7 @@ say what the lipsync costs before spending credits. The one exception: a templat
    generated look's cost is said and agreed first, like the lipsync's). When `looks.json` says
    `"optional": true` (quick-take), ask once instead: the user's exact photo as it is, or reformed into the
    template's shot.
-   **Two voices** (`"voices": 2` in `format.json`, verdict-board): an off-screen interviewer asks and the koi
+   **Two voices** (`"voices": 2` in `format.json`, verdict-board, ranking-products): an off-screen interviewer asks and the koi
    answers, so the video needs a second voice besides the koi's, and nothing is voiced until it has one. Ask
    which voice asks the questions (a voice from Vigen's library, a vigen.io voice link, or a recording to clone)
    and set it up as a voice-only koi (FORMAT.md § 0b). It must sound clearly different from the koi's voice; if

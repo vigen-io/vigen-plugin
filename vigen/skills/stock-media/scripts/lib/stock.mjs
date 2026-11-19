@@ -3,7 +3,9 @@
 //   pixabay   photos + videos, Pixabay content license (same)                         PIXABAY_API_KEY
 //   openverse CC images (Flickr, museums, …) filtered to license_type=commercial      no key
 //   wikimedia Commons images + videos, CC0/PD/CC BY/CC BY-SA only                     no key
-// Not here on purpose: YouTube/yt-dlp (copyright risk), Unsplash (image-only, attribution rules),
+// Press kits (a brand's own newsroom, editorial use) are lib/press.mjs, searched only when a card names its pages.
+// YouTube Creative Commons (CC BY) is lib/youtube.mjs, searched for every card unless "youtube": false.
+// Not here on purpose: YouTube outside its CC filter (copyright risk), Unsplash (image-only, attribution rules),
 // Destockd (robots.txt disallows /api/ — the user can download its public-domain shots into library/).
 // A result: { provider, kind: image|video, title, author, license, licenseUrl, page, attribution,
 //             preview (small image for the contact sheet), url (full file), width, height, duration, relevance }
@@ -16,6 +18,8 @@ import { loadEnv, ROOT } from "./util.mjs";
 import { tokens } from "./library.mjs";
 
 const UA = "video-skills/1.0 (card media search; https://github.com)";
+// Commons appends ?utm_source=… to file URLs; upload.wikimedia.org answers those with 429 (the bare URL works)
+const noUtm = (u) => u?.replace(/\?utm_[^#]*$/, "");
 const strip = (html = "") => html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
 async function getJson(url, headers = {}, timeout = 20_000) {
@@ -124,7 +128,7 @@ async function wikimedia(q, kind, n, opt = {}) {
         licenseUrl: strip(m.LicenseUrl?.value) || null, page: ii.descriptionurl,
         attribution: !/^(cc0|pd|public domain)/i.test(lic),
         attributionText: `"${p.title.replace(/^File:/, "")}" by ${author}, ${lic}, via Wikimedia Commons`,
-        preview: ii.thumburl || ii.url, url: k === "image" ? (ii.width > 2400 ? ii.thumburl : ii.url) : ii.url,
+        preview: noUtm(ii.thumburl || ii.url), url: noUtm(k === "image" ? (ii.width > 2400 ? ii.thumburl : ii.url) : ii.url),
         width: ii.width, height: ii.height, duration: ii.duration,
       });
     }

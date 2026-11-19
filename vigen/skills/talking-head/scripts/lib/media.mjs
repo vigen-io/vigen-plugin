@@ -13,6 +13,8 @@ export function speakable(text) {
     .split("\n")
     .filter((l) => !/^\s*#/.test(l) && !/^\s*(?:-{3,}|={3,})\s*$/.test(l))
     .join("\n")
+    // an interview script's "Q:" (the off-screen voice's lines, vigen parts.mjs) is markup, not a spoken word
+    .replace(/(^|\n|[.!?…]["”’)]*\s)\s*Q:\s*/g, "$1")
     .replace(/\[[^\]]*\]/g, "")
     .replace(/[*_`>]/g, "")
     .replace(/[ \t]+/g, " ")

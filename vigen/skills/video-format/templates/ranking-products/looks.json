@@ -1,0 +1,20 @@
+{
+  "about": "Optional: ranking-products works with the koi's own photo as it is when it is a chest-up, square-to-camera frame with the chest clear (the board fills the lower half). When the user wants the template's set, the koi is reformed into the template's shot with the image-gen skill's formula (SKILL.md § 3): image 1 = a crop of the koi's head, image 2 = `shots/presenter.jpg` (seated in a grey mesh office chair against a plain dark grey studio wall, chest-up, square to the lens), the prompt below with the look's `hair` line and `{{outfit}}` = the koi's own clothes from their photo (image-gen SKILL.md § 3), kept a plain, darkish top (the board's yellow names and white numbers sit on the chest: a busy print or a white or yellow top kills them; say so and use the nearest plain dark colour); the shot's navy tee only when the user asks for it. One standard 1K image; save it with `vigen.mjs koi add-look <koiDir> --template ranking-products --look presenter --frame <file>` and lipsync every part with `--look ranking-products-presenter`. The camera's wide/punch jump cuts are punch-ins on this one take.",
+  "optional": true,
+  "image": {
+    "aspect": "9:16",
+    "size": "1K",
+    "model": "standard"
+  },
+  "prompt": "Recreate image 2 as a new photo, with the person from image 1 in it. Image 1 is only a reference for who the person is (a close-up of their head): ignore anything else in it. The result is image 2's scene, with its person replaced.\n\nCopy image 2 for everything about the shot: the camera angle and height, the distance and framing (how big the person is in the frame and where they sit in it), the pose, the hands, the chair, the set, and the colour, light and film look: match image 2's colours, brightness and softness exactly.\n\nTake only the person's identity from image 1: their face, skin tone, build, and their hair's length, cut and colour. It must clearly be the person in image 1, not the person in image 2. The hair keeps its own length and cut, {{hair}}.\n\nOutfit: {{outfit}}. They wear this, not the clothes of the person in image 2, fitted naturally to image 2's pose.\n\nThe face is fully visible and sharp, lips gently closed with a warm, pleasant smile (no teeth showing), eyes looking into the lens. The chest and the lower half of the frame stay clear of hands and objects. Exactly one person. No text, no captions, no drawings, no logos, no watermark. Photorealistic, vertical 9:16.",
+  "looks": [
+    {
+      "name": "presenter",
+      "shot": "shots/presenter.jpg",
+      "hair": "neat and natural, as when sitting upright",
+      "use": "every part: one seated take, the board on the chest, jump cuts wide / punch between comments",
+      "share": 1.0,
+      "subTop": 0.56
+    }
+  ]
+}

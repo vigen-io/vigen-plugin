@@ -28,7 +28,7 @@ Edit captions.json, not the HTML. The template is found from `"format"` in capti
   "style": {                                      // all optional: the template's captions.style fills the rest
     "font": "Be Vietnam Pro", "top": 0.655,       // top: fraction of height (default: on the chest, from layout)
     "accent": "#0E78D0",                          // b's colour (and the glitch streak's); #rrggbb
-    "entrance": "glitch", "exit": "smear",        // entrance: cut | pop | slide | glitch; exit: cut | smear
+    "entrance": "glitch", "exit": "smear",        // entrance: cut | pop | slide | glitch (a group: also slam | spin); exit: cut | smear
     "w": { "size": 96, "weight": 800 },
     "b": { "size": 140, "outline": "#fff", "glow": true },
     "s": { "size": 64 }, "t": { "size": 124 }, "maxWidth": 940
@@ -53,7 +53,9 @@ Styles, every setting in `references/styles.md`:
 - **Lines** appear on their `at` without reflowing the ones above; a line wider than `maxWidth` shrinks.
 - **Words** instead of lines: one word at a time in the same spot, each replacing the last on its `at`; the
   last one enters with the group's entrance and holds to `end`.
-- Times are video seconds. A group is gone at its `end`. `top` and `exit` per group override.
+- Times are video seconds. A group is gone at its `end`. `top`, `exit`, `entrance` and `rotate` (degrees) per
+  group override; `slam` and `spin` move a whole headline block as one, and `burst` (puff | splash) and
+  `sparkles` draw marks round it (`references/styles.md` § Per group).
 - Layer order: above the stage (presenter, panels), below light-leak flashes.
 
 ## Subtitles mode

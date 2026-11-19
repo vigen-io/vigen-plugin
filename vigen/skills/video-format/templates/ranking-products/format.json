@@ -1,0 +1,171 @@
+{
+  "name": "ranking-products",
+  "guide": "FORMAT.md",
+  "voices": 2,
+  "refs": [
+    "formats/ranking-products/ref-1",
+    "formats/ranking-products/ref-2"
+  ],
+  "targets": {
+    "cutsPerMin": [
+      2,
+      10
+    ],
+    "presenterShare": [
+      0.9,
+      1
+    ],
+    "flashesPerMin": [
+      0,
+      0
+    ],
+    "bedBelowVoice": [
+      12,
+      18
+    ]
+  },
+  "layouts": {
+    "presenter": 0.74,
+    "productCard": 0.2,
+    "wideCard": 0.02,
+    "full": 0.04
+  },
+  "theme": "gold",
+  "brand": {
+    "font": "Montserrat",
+    "accent": "#FFE81A"
+  },
+  "shots": {
+    "frames": {
+      "wide": 1,
+      "punch": 1.1
+    },
+    "in": "cut",
+    "out": "cut"
+  },
+  "captions": {
+    "style": {
+      "font": "Montserrat",
+      "fonts": [
+        {
+          "family": "Montserrat",
+          "file": "formats/ranking-products/fonts/Montserrat.ttf"
+        },
+        {
+          "family": "Bangers",
+          "file": "formats/ranking-products/fonts/Bangers-Regular.ttf"
+        }
+      ],
+      "entrance": "cut",
+      "exit": "cut",
+      "maxWidth": 1000,
+      "t": {
+        "font": "Bangers",
+        "size": 92,
+        "weight": 400,
+        "color": "#FFF22E",
+        "outline": "#111111",
+        "outlineWidth": 3,
+        "box": "#1F8FE8",
+        "boxRadius": 0,
+        "boxPad": "0.03em 0.2em 0em",
+        "tracking": 0.005,
+        "em": 0.62
+      }
+    },
+    "title": {
+      "top": 0.56,
+      "rotate": -3,
+      "entrance": "slam",
+      "burst": "puff",
+      "sparkles": true
+    },
+    "themes": {
+      "aqua": {
+        "title": {
+          "top": 0.562,
+          "rotate": -3,
+          "entrance": "spin",
+          "burst": "splash"
+        },
+        "t": {
+          "font": "Bangers",
+          "size": 86,
+          "weight": 400,
+          "color": "#FFFFFF",
+          "outline": "#111111",
+          "outlineWidth": 4,
+          "glow": "#FFE600",
+          "tracking": 0.005,
+          "em": 0.62
+        }
+      }
+    }
+  },
+  "cards": {
+    "size": {
+      "w": 1080,
+      "h": 1920
+    }
+  },
+  "productCard": {
+    "rect": {
+      "x": 252,
+      "y": 1060,
+      "w": 576,
+      "h": 576,
+      "r": 0
+    },
+    "blur": {
+      "pad": [
+        190,
+        65
+      ],
+      "feather": 40
+    },
+    "in": "white",
+    "out": "cut"
+  },
+  "wideCard": {
+    "rect": {
+      "x": 34,
+      "y": 1135,
+      "w": 1012,
+      "h": 418,
+      "r": 0
+    },
+    "blur": {
+      "pad": [
+        190,
+        120
+      ],
+      "feather": 40
+    },
+    "in": "swing",
+    "out": "cut"
+  },
+  "sound": {
+    "bgm": {
+      "below": 16
+    },
+    "cues": "auto",
+    "captionSfx": []
+  },
+  "item": {
+    "seconds": [
+      5,
+      12
+    ],
+    "guessToConfirm": [
+      0.1,
+      0.3
+    ]
+  },
+  "cover": false,
+  "interview": {
+    "interviewer": "required: a second, voice-only koi, the off-screen host who reads the challenge and confirms every guess (Q: lines, FORMAT.md § 0b)",
+    "qPause": 0.15,
+    "turnGap": 0.15,
+    "questionBelowAnswerDb": 1
+  }
+}

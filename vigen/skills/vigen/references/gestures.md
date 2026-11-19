@@ -23,9 +23,17 @@ models. Treat it as the method, and check the takes.
   one on the other). That rest pose is where every gesture starts and where it
   returns. **[Vigen docs]** The photo's pose comes back at the start and end
   of every chunk and every 2.5–5 s at quiet moments.
-- **No hands visible** (tight head-and-shoulders): plan no hand gestures.
-  Plan head and face beats instead: a nod, a lean in, lifted brows, a glance.
-  Hands entering a tight frame from below render badly.
+- **No hands visible, arms at the sides** (chest-up, the hands just below the
+  frame's bottom edge): hands rising into the frame render well **[tested
+  2026-11-19, ranking-products, 13 chunks, none flagged]**: a temple tap, a
+  chin rub, both hands framing a phone, a fist pump, a thumbs-up. Plan them when
+  the template's presenter gestures, and say in the prompt that the hands come
+  up from below and drop back out of the frame. Telling the prompt "the hands
+  stay out of the frame" gave a stiff take of nods only, which the user
+  rejected next to the reference.
+- **No hands visible, tight head-and-shoulders** (the shoulders cut by the
+  frame): plan no hand gestures. Plan head and face beats instead: a nod, a lean
+  in, lifted brows, a glance. Hands entering a tight frame from below render badly.
 - **Something held** (a microphone, a product): gestures come from the free
   hand only.
 - Gestures live between the shoulders and the waist, in front of the torso.

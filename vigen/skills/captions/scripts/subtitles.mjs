@@ -128,6 +128,8 @@ for (const t of titles) {
   const style = t.style || "t";
   if (t.top != null && t.top < 0.16) console.error(`! title "${t.text || t.lines?.[0]}" at top ${t.top}: the platform's top bar covers anything above 0.16`);
   out.push({ start: t.start, end: t.end, top: t.top ?? 0.16, note: "title",
+    ...(t.entrance ? { entrance: t.entrance } : {}), ...(t.rotate ? { rotate: t.rotate } : {}),
+    ...(t.burst ? { burst: t.burst } : {}), ...(t.sparkles ? { sparkles: t.sparkles } : {}),
     lines: lines.map((x, i) => ({ text: x, style, at: r3(t.start + (t.stagger ?? 0.12) * i), ...(t.size ? { size: t.size } : {}) })) });
 }
 out.sort((a, b) => a.start - b.start);

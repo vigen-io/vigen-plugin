@@ -71,7 +71,10 @@ shots.json) supplies defaults, found from `"format"` in shots.json or the projec
 - `presenter` on a panel (a name in `presenters`, or the object itself): the cutout alone is moved, scaled,
   outlined like a sticker or cut down to the head for the panel's stay, the panels staying put
   (`references/layouts.md` § Presenter placements). Mostly with `card` on a full-frame `brand.card`.
-- `in`: `cut | whip | drop | fade | pop | white | leak`. `out`: `cut | whip | lift | fade | shrink | white | leak`.
+- `in`: `cut | whip | drop | fade | pop | white | swing | leak`. `out`: `cut | whip | lift | fade | shrink | white | leak`.
+- `blur` on a panel (`true`, or `{ "pad": [190, 65], "feather": 40, "grade": "soft" }`): the take itself,
+  defocused, fills a soft-edged box `pad` px (x, y) around the panel for its stay, the presenter blurred with
+  it: a product shot laid on the chest reads as a card on frosted glass (`references/panel-transitions.md`).
   Exits finish exactly at `end`, so the next panel can start on the same frame.
 
 ## Recipes (references/)

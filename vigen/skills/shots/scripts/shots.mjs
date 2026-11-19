@@ -14,7 +14,7 @@ import path from "node:path";
 import { ROOT, parseArgs, log, readJson, writeJson, ffmpeg, probe, f3, esc, projectDir, talkingInfo, ensureIndex, hostBlock, localize, loadFormat, underlay, IMAGE_EXT, VIDEO_EXT, NeedsInput, exitOnError, isMain } from "./lib/util.mjs";
 
 export const FRAMES = { wide: 1, punch: 1.27, tight: 1.45 };
-const IN = ["cut", "whip", "drop", "fade", "pop", "white", "leak", "paper"];
+const IN = ["cut", "whip", "drop", "fade", "pop", "white", "swing", "leak", "paper"];
 const OUT = ["cut", "whip", "lift", "fade", "shrink", "white", "leak"];
 
 /**
@@ -65,7 +65,7 @@ function holdPanels(spec, D) {
 }
 
 /** Graded copy for an animated grade (no CSS filter grades on footage): bw (greyscale) | blur (heavy defocus). */
-const GRADES = { bw: "hue=s=0", blur: "gblur=sigma=32:steps=2,eq=brightness=-0.03" };
+const GRADES = { bw: "hue=s=0", blur: "gblur=sigma=32:steps=2,eq=brightness=-0.03", soft: "gblur=sigma=14:steps=2" };
 async function gradedCopy(proj, rel, kind = "bw") {
   if (!GRADES[kind]) throw new Error(`grade "${kind}" is not one of ${Object.keys(GRADES).join(", ")}`);
   const isVid = VIDEO_EXT.includes(path.extname(rel).toLowerCase());
@@ -89,6 +89,8 @@ function transitions(sel, p, s, e, rect, leaks) {
   else if (inn === "fade") js.push(`tl.fromTo("${sel}", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out", immediateRender: false }, ${s});`);
   else if (inn === "pop") js.push(`tl.fromTo("${sel}", { opacity: 0, scale: 0.82 }, { opacity: 1, scale: 1, duration: 0.42, ease: "back.out(1.4)", immediateRender: false }, ${s});`);
   else if (inn === "white") js.push(`tl.set("${sel}", { opacity: 1 }, ${s});`, `tl.fromTo("${sel} .flash", { opacity: 1 }, { opacity: 0, duration: 0.35, ease: "power2.out", immediateRender: false }, ${s});`);
+  // swing: lands tilted and a little large from the right, swings past level and settles (a screenshot dropped on)
+  else if (inn === "swing") js.push(`tl.fromTo("${sel}", { opacity: 1, rotation: 9, scale: 1.12, x: 70 }, { rotation: 0, scale: 1, x: 0, duration: 0.26, ease: "back.out(3)", immediateRender: false }, ${s});`);
   else js.push(`tl.set("${sel}", { opacity: 1 }, ${s});`);
   if (inn === "leak") leaks.push(s);
   if (out === "whip") js.push(`tl.fromTo("${sel}", { x: 0, filter: "blur(0px)" }, { x: 1150, filter: "blur(28px)", duration: 0.26, ease: "power3.in", immediateRender: false }, ${f3(e - 0.26)});`);
@@ -157,6 +159,20 @@ async function stage(proj, spec, info) {
     if (layout === "split") camShift.push([s, e]);
     if (layout === "window") winRanges.push([s, e]);
     if (p.presenter) presRanges.push([s, e, p.presenter, id]);
+    if (p.blur) {
+      // the take itself, defocused, in a soft-edged box around the panel for its stay (the presenter blurs too):
+      // inside the camera, above the cutout, so a punch-in scales it with the shot
+      const b = typeof p.blur === "object" ? p.blur : {};
+      const [px, py] = Array.isArray(b.pad) ? b.pad : [b.pad ?? 190, b.pad ?? 65];
+      const fe = b.feather ?? 40;
+      const bx = Math.max(0, r.x - px), by = Math.max(0, r.y - py), bw = Math.min(W, r.x + r.w + px) - bx, bh = Math.min(H, r.y + r.h + py) - by;
+      const soft = await gradedCopy(proj, info.plate, b.grade || "soft");
+      const mask = `linear-gradient(90deg, transparent, #000 ${fe}px, #000 calc(100% - ${fe}px), transparent), linear-gradient(180deg, transparent, #000 ${fe}px, #000 calc(100% - ${fe}px), transparent)`;
+      html.push(`<div id="bl-${id}" class="panel" style="left:${bx}px;top:${by}px;width:${bw}px;height:${bh}px;z-index:150;-webkit-mask-image:${mask};-webkit-mask-composite:source-in;mask-image:${mask};mask-composite:intersect">
+  <video id="bl-${id}-m" class="clip" src="${soft}" data-start="${s}" data-duration="${dur}" data-media-start="${s}" data-track-index="6" muted playsinline style="position:absolute;left:${-bx}px;top:${-by}px;width:${W}px;height:${H}px;object-fit:cover"></video>
+</div>`);
+      js.push(`tl.set("#bl-${id}", { opacity: 1 }, ${s});`, `tl.set("#bl-${id}", { opacity: 0 }, ${e});`);
+    }
     if (p.backdrop) {
       // a colour over the whole frame behind the panel for its stay (a clip shown smaller than the frame, on black)
       over.push(`<div id="bd-${id}" class="panel" style="left:0;top:0;width:${W}px;height:${H}px;z-index:${z - 1};background:${p.backdrop}"></div>`);

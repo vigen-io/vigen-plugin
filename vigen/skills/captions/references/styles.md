@@ -15,6 +15,29 @@ captions.json `style` overrides them; a group's `top` / `exit` and a line's `siz
 | `entrance` | `cut` | `cut` (appears), `pop` (scale 0.6 → 1, back.out, 0.3 s), `slide` (rises 40 px, 0.3 s), `glitch` (smears in from the left with a stepped scan and a pixel streak, 0.26 s) |
 | `exit` | `cut` | `cut` (gone at `end`), `smear` (smears right with blur, 0.16 s, gone at `end`) |
 
+## Per group
+
+A group may take its own `entrance` (over the global one), `exit`, `top` and `rotate` (degrees, the whole block
+tilted, e.g. `-3` for a hook headline). Two entrances move the whole block as one (a headline of two lines);
+its lines just appear on their `at`:
+
+| entrance | what it does |
+|---|---|
+| `slam` | drops in from ≈ 3.2× its size, half see-through and blurred, settling in 0.17 s (power3.out) |
+| `spin` | swings in from ≈ 68° off its `rotate`, 1.25× and blurred, overshoots ≈ 10° past it and settles: 0.24 s (back.out 2.6) |
+
+Both measured at 60 fps from the ranking-products references (templates/ranking-products/FORMAT.md § 2).
+
+A headline group may also carry **marks**, drawn round the block and tilted with it, above the words:
+
+| key | what it draws |
+|---|---|
+| `"burst": "puff"` | as the block lands (+0.17 s) a white comic cloud with thin grey outlines bursts from its middle to both ends, breaks into outlined arcs and drifting dots, gone by +0.55 s |
+| `"burst": "splash"` | droplets fly in (+0.02 s), three thick white brush arcs sweep round the block and spray off (+0.33 s) |
+| `"sparkles": true` | yellow four-point star pairs at the top-left and bottom-right corners, twinkling from +0.6 s to the group's end |
+
+titles.json entries take `entrance`, `rotate`, `burst` and `sparkles` too.
+
 ## Per line style
 
 | style | default | look |
@@ -22,14 +45,15 @@ captions.json `style` overrides them; a group's `top` / `exit` and a line's `siz
 | `w` | 96 px, 800, white | soft dark shadow; `outline` (a colour, `outlineWidth` px, default 3) adds a ring around the letters |
 | `b` | 140 px, 800, `accent` | `outline` ring around the letters (default `rgba(0,0,0,0.55)`), `glow: true` adds a white halo |
 | `s` | 64 px, 700, white | soft dark shadow |
-| `t` | 124 px, 900, white | uppercase, tight, heavy dark ring + drop shadow; for headlines over media |
+| `t` | 124 px, 900, white | uppercase, tight, heavy dark ring + drop shadow; for headlines over media. `outline` (+ `outlineWidth`, default 4) sets the ring's colour, `glow` (a colour) adds a soft halo of it outside the ring in place of the drop shadow |
 | `h` | 120 px, 400, white | hand-lettered accent: set `font` to a handwriting family; `hollow: true` draws outlined letters |
 
-Every style also takes `upper: true` (shown in capitals) and `tracking` (letter-spacing in em, e.g. `-0.05`
+Every style also takes `em` (its font's width against Be Vietnam Pro ExtraBold, for the shrink-to-fit: ≈ 0.62 for
+a condensed face like Bangers), `upper: true` (shown in capitals) and `tracking` (letter-spacing in em, e.g. `-0.05`
 for tight, heavy subtitles).
 
 A line in captions.json may take its own `color` (a whole subtitle in another colour, e.g. a question).
-Every style also takes `color`, `box` (a CSS colour: a rounded label box behind the text, shadow off) and
+Every style also takes `color`, `box` (a CSS colour: a rounded label box behind the text, shadow off unless the style has an `outline`; `boxRadius` in em, default 0.16, `boxPad` a CSS padding, `boxShadow` a CSS box-shadow) and
 `font` (its own family, e.g. a handwriting face for `h`). Families other than Be Vietnam Pro go in the global
 `fonts: [{ "family", "file", "weight"? }]`: each `file` (found from the project, else the workspace) is copied
 into `assets/fonts/`, so cards can use the same `url("assets/fonts/<file>")`.
